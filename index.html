@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Compound — a daily ledger</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="theme-color" content="#16201c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Compound">
+<style>
+  :root{
+    --bg:#e7e9e1;
+    --sheet:#fbfbf8;
+    --sheet-2:#f3f2ea;
+    --ink:#16201c;
+    --ink-soft:#5b6b60;
+    --ink-faint:#94a396;
+    --rule:#c7cdbe;
+    --rule-strong:#a9b39d;
+    --teal:#1f5c4d;
+    --teal-light:#e4efe9;
+    --brick:#9c3b2c;
+    --brick-light:#f3e4df;
+    --brass:#a9822f;
+    --brass-light:#f1e8d2;
+    --radius:3px;
+    --shadow:0 1px 0 rgba(22,32,28,.06), 0 8px 20px -14px rgba(22,32,28,.35);
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Noto Serif', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+    padding-left:env(safe-area-inset-left);
+    padding-right:env(safe-area-inset-right);
+    background:var(--bg);
+    background-image:linear-gradient(var(--rule) 1px, transparent 1px);
+    background-size:100% 34px;
+    background-position:0 148px;
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--brass-light); }
+  button{ font-family:inherit; }
+  input, textarea, select{ font-family:inherit; font-size:14px; }
+  .wrap{ max-width:760px; margin:0 auto; padding:0 20px 80px; }
+  header.masthead{ padding:36px 20px 0; max-width:800px; margin:0 auto; }
+  .masthead-inner{ display:flex; align-items:flex-end; justify-content:space-between; border-bottom:2px solid var(--ink); padding-bottom:14px; }
+  .brand{ font-family:var(--font-display); font-weight:600; font-size:30px; letter-spacing:-0.01em; }
+  .brand small{ display:block; font-family:var(--font-mono); font-weight:500; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); margin-top:4px; }
+  .streak-badge{ font-family:var(--font-mono); font-size:12px; color:var(--ink-soft); text-align:right; line-height:1.6; }
+  .streak-badge b{ color:var(--ink); font-size:18px; display:block; }
+  nav.tabs{ max-width:800px; margin:0 auto; display:flex; gap:6px; padding:0 20px; position:relative; top:1px; flex-wrap:wrap; }
+  .tab{ appearance:none; border:1px solid var(--ink); border-bottom:none; background:var(--sheet-2); color:var(--ink-soft);
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    padding:9px 16px 8px; border-radius:4px 4px 0 0; cursor:pointer; transform:translateY(3px);
+    transition:transform .12s ease, background .12s ease, color .12s ease; }
+  .tab:hover{ color:var(--ink); }
+  .tab.active{ background:var(--sheet); color:var(--ink); font-weight:600; transform:translateY(0); }
+  .tab .dot{ display:inline-block; width:6px;height:6px; border-radius:50%; margin-right:6px; background:var(--brass); position:relative; top:-1px; }
+  main.sheet{ max-width:800px; margin:0 auto; background:var(--sheet); border:1px solid var(--ink); border-radius:0 4px 4px 4px;
+    box-shadow:var(--shadow); padding:28px 28px 32px; min-height:420px; }
+  h2.section-title{ font-family:var(--font-display); font-weight:600; font-size:20px; margin:0 0 4px; }
+  p.section-sub{ color:var(--ink-soft); font-size:13px; margin:0 0 20px; }
+  .group-label{ font-size:14px; margin:0; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
+  .balance{ display:flex; align-items:center; gap:14px; padding:14px 16px; border:1px solid var(--rule-strong); border-radius:var(--radius); background:var(--sheet-2); margin-bottom:22px; flex-wrap:wrap; }
+  .balance .count{ font-family:var(--font-mono); font-size:22px; font-weight:600; white-space:nowrap; }
+  .balance .count span{ color:var(--ink-soft); font-size:13px; font-weight:500; }
+  .balance-track{ flex:1; min-width:80px; height:8px; background:var(--brick-light); border-radius:2px; overflow:hidden; border:1px solid var(--rule-strong); }
+  .balance-fill{ height:100%; background:var(--teal); }
+  .ledger-rows{ margin-bottom:6px; }
+  .row{ display:flex; align-items:flex-start; gap:12px; padding:11px 2px; border-bottom:1px solid var(--rule); }
+  .row:first-child{ border-top:1px solid var(--rule); }
+  .row-idx{ font-family:var(--font-mono); font-size:12px; color:var(--ink-faint); width:20px; padding-top:3px; flex-shrink:0; }
+  .tick{ width:19px;height:19px; border:1.5px solid var(--ink); border-radius:3px; flex-shrink:0; margin-top:1px; cursor:pointer;
+    background:var(--sheet); display:flex;align-items:center;justify-content:center; padding:0; }
+  .tick svg{ display:none; width:12px;height:12px; }
+  .tick.done{ background:var(--teal); border-color:var(--teal); }
+  .tick.done svg{ display:block; }
+  .row-body{ flex:1; min-width:0; }
+  .row-text{ font-size:14.5px; word-break:break-word; }
+  .row.done .row-text{ color:var(--ink-soft); text-decoration:line-through; text-decoration-color:var(--rule-strong); }
+  .row-tag{ display:inline-block; margin-top:5px; margin-right:5px; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.04em;
+    padding:2px 7px; border-radius:2px; background:var(--brass-light); color:#6b5420; text-transform:uppercase; }
+  .row-del{ background:none;border:none;color:var(--ink-faint); cursor:pointer; font-size:16px; padding:2px 4px; flex-shrink:0; line-height:1; }
+  .row-del:hover{ color:var(--brick); }
+  .add-row{ display:flex; gap:8px; align-items:center; padding:14px 2px 4px; flex-wrap:wrap; }
+  input[type="text"], select, input[type="date"], input[type="time"], textarea{ border:1px solid var(--rule-strong); border-radius:var(--radius);
+    padding:9px 11px; background:var(--sheet); color:var(--ink); }
+  input:focus, select:focus, textarea:focus{ outline:2px solid var(--teal); outline-offset:1px; }
+  .add-row input[type="text"]{ flex:1; min-width:150px; }
+  .add-row select{ max-width:150px; font-size:12.5px; color:var(--ink-soft); }
+  .btn{ appearance:none; border:1px solid var(--ink); background:var(--ink); color:var(--sheet); padding:9px 16px;
+    border-radius:var(--radius); font-weight:600; font-size:13px; cursor:pointer; }
+  .btn:hover{ opacity:.88; }
+  .btn.ghost{ background:transparent; color:var(--ink); border-color:var(--rule-strong); }
+  .btn.ghost:hover{ border-color:var(--ink); }
+  .btn.danger{ background:var(--brick); border-color:var(--brick); }
+  .btn.small{ padding:6px 12px; font-size:12px; }
+  .close-block{ margin-top:26px; padding-top:18px; border-top:1px dashed var(--rule-strong); }
+  textarea.reflect{ width:100%; min-height:56px; resize:vertical; font-size:13.5px; margin-top:10px; }
+  .stamp{ display:inline-flex; flex-direction:column; align-items:center; border:2.5px solid var(--stamp-c, var(--teal)); color:var(--stamp-c, var(--teal));
+    border-radius:6px; padding:8px 18px; transform:rotate(-4deg); font-family:var(--font-mono); font-weight:600;
+    letter-spacing:.06em; font-size:12px; text-transform:uppercase; opacity:.9; }
+  .stamp .big{ font-size:16px; letter-spacing:.02em; }
+  .empty{ text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:13.5px; }
+  .empty .big{ font-family:var(--font-display); font-size:19px; color:var(--ink); margin-bottom:6px; font-weight:600; }
+  .goal-group{ margin-bottom:30px; }
+  .goal-group-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:10px; flex-wrap:wrap; }
+  .goal-card{ border:1px solid var(--rule-strong); border-radius:var(--radius); padding:14px 16px; margin-bottom:10px; background:var(--sheet-2); }
+  .goal-card.archived{ opacity:.55; }
+  .goal-top{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+  .goal-title{ font-weight:600; font-size:14.5px; }
+  .goal-meta{ font-size:12px; color:var(--ink-soft); margin-top:3px; }
+  .goal-desc{ font-size:13px; color:var(--ink-soft); margin-top:6px; }
+  .goal-progress{ display:flex; align-items:center; gap:10px; margin-top:10px; }
+  .goal-track{ flex:1; height:6px; background:var(--brick-light); border-radius:2px; overflow:hidden; border:1px solid var(--rule-strong); }
+  .goal-fill{ height:100%; background:var(--teal); }
+  .goal-pct{ font-family:var(--font-mono); font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
+  .goal-actions{ display:flex; gap:6px; margin-top:10px; }
+  .link-btn{ background:none;border:none;color:var(--ink-soft); font-size:11.5px; cursor:pointer; text-decoration:underline; padding:2px 0; display:inline-flex; align-items:center; }
+  .link-btn:hover{ color:var(--ink); }
+  .inline-form{ border:1px dashed var(--rule-strong); border-radius:var(--radius); padding:14px; margin-bottom:14px; background:var(--sheet); }
+  .field-row{ display:flex; gap:10px; margin-bottom:9px; flex-wrap:wrap; }
+  .field-row > *{ flex:1; min-width:140px; }
+  .field-label{ font-family:var(--font-mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); display:block; margin-bottom:4px; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px; }
+  .stat-card{ border:1px solid var(--rule-strong); border-radius:var(--radius); padding:12px 14px; background:var(--sheet-2); }
+  .stat-card .num{ font-family:var(--font-mono); font-size:22px; font-weight:600; }
+  .stat-card .lbl{ font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+  .heat-wrap{ overflow-x:auto; padding-bottom:6px; margin-bottom:22px; }
+  .heat-grid{ display:grid; grid-auto-flow:column; grid-template-rows:repeat(7, 13px); gap:3px; width:max-content; }
+  .heat-cell{ width:13px;height:13px; border-radius:1px; border:1px solid rgba(22,32,28,.08); }
+  .heat-legend{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--ink-soft); margin-top:8px; }
+  .heat-legend .heat-cell{ width:11px;height:11px; }
+  table.hist-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.hist-table th{ text-align:left; font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--ink-soft); border-bottom:1px solid var(--ink); padding:6px 8px; }
+  table.hist-table td{ padding:8px; border-bottom:1px solid var(--rule); vertical-align:top; }
+  table.hist-table tr:last-child td{ border-bottom:none; }
+  .rate-pill{ font-family:var(--font-mono); font-size:11.5px; font-weight:600; padding:2px 7px; border-radius:2px; display:inline-block; }
+  .footbar{ max-width:800px; margin:14px auto 0; padding:0 20px; display:flex; justify-content:space-between; align-items:center;
+    font-size:12px; color:var(--ink-faint); flex-wrap:wrap; gap:8px; }
+  .footbar button{ background:none; border:none; color:var(--ink-faint); text-decoration:underline; cursor:pointer; font-size:12px; }
+  .footbar button:hover{ color:var(--ink-soft); }
+  #status{ font-family:var(--font-mono); }
+  .modal-bg{ position:fixed; inset:0; background:rgba(22,32,28,.45); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50; }
+  .modal{ background:var(--sheet); border:1px solid var(--ink); border-radius:6px; max-width:380px; width:100%; padding:22px; box-shadow:var(--shadow); }
+  .modal h3{ font-family:var(--font-display); margin:0 0 8px; font-size:17px; }
+  .modal p{ font-size:13.5px; color:var(--ink-soft); margin:0 0 18px; }
+  .modal .row-btns{ display:flex; gap:8px; justify-content:flex-end; }
+  .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--ink); color:var(--sheet); padding:9px 16px;
+    border-radius:5px; font-size:12.5px; z-index:60; opacity:0; pointer-events:none; transition:opacity .2s ease; }
+  .toast.show{ opacity:1; }
+  .log-date-head{ font-family:var(--font-mono); font-size:11.5px; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--ink-soft); border-bottom:1px solid var(--ink); padding-bottom:4px; margin-bottom:8px; }
+  @media (max-width:600px){
+    header.masthead{ padding:24px 14px 0; }
+    .masthead-inner{ flex-direction:column; align-items:flex-start; gap:10px; }
+    .streak-badge{ text-align:left; }
+    nav.tabs{ padding:0 14px; }
+    main.sheet{ padding:20px 16px 26px; border-radius:0 4px 4px 4px; }
+    .wrap{ padding:0 14px 60px; }
+    .footbar{ padding:0 14px; }
+  }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand">Compound<small>a daily ledger of promises made and kept</small></div>
+    <div class="streak-badge" id="streakBadge">—</div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-tab="today"><span class="dot"></span>Today</button>
+  <button class="tab" data-tab="goals">Goals</button>
+  <button class="tab" data-tab="log">Log</button>
+  <button class="tab" data-tab="history">History</button>
+</nav>
+
+<div class="wrap">
+  <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
+  <div class="footbar">
+    <span id="status"></span>
+    <span>
+      <label style="cursor:pointer;"><input type="checkbox" id="voiceToggle" style="vertical-align:-2px;margin-right:4px;">voice on close-out</label>
+      &nbsp;·&nbsp;
+      <button id="exportBtn">export data</button>
+      &nbsp;·&nbsp;
+      <button id="importBtn">import data</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+      &nbsp;·&nbsp;
+      <button id="resetBtn">reset all</button>
+    </span>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ---------------- on-device storage shim ----------------
+     Same get/set/delete/list contract as the Claude-artifact
+     storage API, backed by localStorage instead of a network
+     call, so the rest of the app is untouched. Everything
+     lives under a 'compound:' key prefix in this origin's
+     local storage, which is what makes it work offline. */
+  window.storage = (function(){
+    var NS = 'compound:';
+    function full(key){ return NS + key; }
+    return {
+      get: function(key){
+        return new Promise(function(resolve, reject){
+          try{
+            var raw = window.localStorage.getItem(full(key));
+            if (raw === null){ reject(new Error('not found')); return; }
+            resolve({ key: key, value: raw, shared: false });
+          }catch(e){ reject(e); }
+        });
+      },
+      set: function(key, value){
+        return new Promise(function(resolve){
+          try{
+            window.localStorage.setItem(full(key), value);
+            resolve({ key: key, value: value, shared: false });
+          }catch(e){ resolve(null); }
+        });
+      },
+      delete: function(key){
+        return new Promise(function(resolve){
+          try{
+            var existed = window.localStorage.getItem(full(key)) !== null;
+            window.localStorage.removeItem(full(key));
+            resolve({ key: key, deleted: existed, shared: false });
+          }catch(e){ resolve(null); }
+        });
+      },
+      list: function(prefix){
+        return new Promise(function(resolve){
+          var keys = [];
+          try{
+            for (var i=0;i<window.localStorage.length;i++){
+              var k = window.localStorage.key(i);
+              if (k.indexOf(NS) === 0){
+                var real = k.slice(NS.length);
+                if (!prefix || real.indexOf(prefix) === 0) keys.push(real);
+              }
+            }
+          }catch(e){}
+          resolve({ keys: keys, prefix: prefix, shared: false });
+        });
+      }
+    };
+  })();
+
+  if ('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('./service-worker.js').catch(function(){});
+    });
+  }
+
+(function(){
+  "use strict";
+
+  /* ---------------- utilities ---------------- */
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function toDateStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function todayStr(){ return toDateStr(new Date()); }
+  function addDays(dateStr, n){
+    var d = new Date(dateStr+'T00:00:00');
+    d.setDate(d.getDate()+n);
+    return toDateStr(d);
+  }
+  function prettyDate(dateStr){
+    var d = new Date(dateStr+'T00:00:00');
+    return d.toLocaleDateString(undefined,{ weekday:'short', month:'short', day:'numeric' });
+  }
+  function escapeHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function pct(part, whole){ return whole > 0 ? Math.round((part/whole)*100) : 0; }
+  function speakerIcon(){
+    return '<svg viewBox="0 0 20 20" width="13" height="13" style="vertical-align:-2px;margin-right:4px;" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 7.5h2.6L9 4.8v10.4L5.6 12.5H3z" fill="currentColor" stroke="none"/><path d="M12.3 6.8a4 4 0 010 6.4" stroke-linecap="round"/></svg>';
+  }
+  function lockIcon(){
+    return '<svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4" style="vertical-align:-2px;"><rect x="4" y="9" width="12" height="8" rx="1.5"/><path d="M6.5 9V6.5a3.5 3.5 0 017 0V9"/></svg>';
+  }
+
+  /* ---------------- countdown math ---------------- */
+  function daysInMonthBefore(y, m){ return new Date(y, m, 0).getDate(); }
+  function diffYMD(a, b){
+    var y = b.getFullYear()-a.getFullYear();
+    var m = b.getMonth()-a.getMonth();
+    var d = b.getDate()-a.getDate();
+    if (d<0){ m-=1; d += daysInMonthBefore(b.getFullYear(), b.getMonth()); }
+    if (m<0){ y-=1; m+=12; }
+    return { years:y, months:m, days:d };
+  }
+  function formatCountdown(targetDate, targetTime){
+    var target = new Date(targetDate+'T'+(targetTime||'00:00')+':00');
+    var now = new Date();
+    var passed = target < now;
+    var a = passed ? target : now;
+    var b = passed ? now : target;
+    var diff = diffYMD(a,b);
+    var text;
+    if (diff.years>0) text = diff.years+(diff.years===1?' year':' years')+', '+diff.months+(diff.months===1?' month':' months');
+    else if (diff.months>0) text = diff.months+(diff.months===1?' month':' months')+', '+diff.days+(diff.days===1?' day':' days');
+    else text = diff.days===0 ? 'today' : (diff.days+(diff.days===1?' day':' days'));
+    return { text:text, passed:passed };
+  }
+  function daysUntil(targetDate, targetTime){
+    var target = new Date(targetDate+'T'+(targetTime||'00:00')+':00').getTime();
+    return (target - Date.now()) / 86400000;
+  }
+  function deadlineColor(daysLeft, passed){
+    if (passed || daysLeft <= 7) return 'var(--brick)';
+    if (daysLeft <= 30) return 'var(--brass)';
+    return 'var(--teal)';
+  }
+  function elapsedFraction(createdAt, targetDate, targetTime){
+    var start = new Date(createdAt+'T00:00:00').getTime();
+    var end = new Date(targetDate+'T'+(targetTime||'00:00')+':00').getTime();
+    if (end <= start) return 1;
+    var f = (Date.now() - start) / (end - start);
+    return Math.max(0, Math.min(1, f));
+  }
+
+  /* ---------------- storage ---------------- */
+  async function safeGet(key, fallback){
+    try{
+      var res = await window.storage.get(key, false);
+      if(!res || res.value == null) return fallback;
+      return JSON.parse(res.value);
+    }catch(e){ return fallback; }
+  }
+  async function safeSet(key, value){
+    try{
+      setStatus('saving…');
+      var res = await window.storage.set(key, JSON.stringify(value), false);
+      setStatus(res ? 'saved' : 'save failed');
+      if(res) setTimeout(function(){ if(statusEl.textContent==='saved') setStatus(''); }, 1200);
+      return !!res;
+    }catch(e){ setStatus('save failed'); return false; }
+  }
+  async function deleteAllKeys(){
+    try{
+      var days = await window.storage.list('day:', false);
+      var logs = await window.storage.list('log:', false);
+      var keys = ['meta:goals','meta:app','stats:daily-summary','meta:events'];
+      if(days && days.keys) keys = keys.concat(days.keys);
+      if(logs && logs.keys) keys = keys.concat(logs.keys);
+      for (var i=0;i<keys.length;i++){
+        try{ await window.storage.delete(keys[i], false); }catch(e){}
+      }
+    }catch(e){}
+  }
+
+  var statusEl = document.getElementById('status');
+  function setStatus(t){ statusEl.textContent = t; }
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2200);
+  }
+
+  /* ---------------- voice ---------------- */
+  function speak(text){
+    if (!('speechSynthesis' in window)){ toast('Voice not supported in this browser'); return; }
+    try{
+      window.speechSynthesis.cancel();
+      var u = new window.SpeechSynthesisUtterance(text);
+      u.rate = 0.98; u.pitch = 1;
+      window.speechSynthesis.speak(u);
+    }catch(e){ toast('Voice playback failed'); }
+  }
+  function speechForToday(){
+    var planned = state.day.tasks.length;
+    var completed = state.day.tasks.filter(function(t){return t.completed;}).length;
+    var s = computeStats();
+    if (state.day.closedOut) return 'Day closed. '+completed+' of '+planned+' kept. '+s.showUpStreak+' day streak.';
+    if (planned===0) return 'Nothing planned yet today.';
+    return completed+' of '+planned+' done so far today.';
+  }
+  function speechForHistory(s){
+    return s.showUpStreak+' day current streak. Best streak '+s.showUpBest+' days. Lifetime follow-through '+s.lifetimeRate+' percent. '+s.totalCompleted+' of '+s.totalPlanned+' promises kept.';
+  }
+
+  /* ---------------- state ---------------- */
+  var state = {
+    activeTab: 'today',
+    goals: { longTerm: [], shortTerm: [] },
+    events: [],
+    summary: [],
+    meta: { lastActiveDate: null, voiceOnClose: true },
+    today: todayStr(),
+    day: { tasks: [], reflection: '', closedOut: false, closedAt: null },
+    logYears: {},
+    logYearsAvailable: [],
+    logYearsLoaded: [],
+    editingLogId: null
+  };
+
+  function summaryIndex(date){
+    for (var i=0;i<state.summary.length;i++){ if(state.summary[i].date===date) return i; }
+    return -1;
+  }
+  function upsertSummary(entry){
+    var idx = summaryIndex(entry.date);
+    if(idx>=0) state.summary[idx] = entry; else state.summary.push(entry);
+    state.summary.sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  }
+  function findGoal(ref){
+    if(!ref || !ref.id) return null;
+    var list = ref.type==='long' ? state.goals.longTerm : state.goals.shortTerm;
+    for (var i=0;i<list.length;i++){ if(list[i].id===ref.id) return list[i]; }
+    return null;
+  }
+  function adjustGoalStat(ref, field, delta){
+    var g = findGoal(ref);
+    if(!g) return;
+    if(!g.stats) g.stats = { planned:0, completed:0 };
+    g.stats[field] = Math.max(0, (g.stats[field]||0) + delta);
+  }
+
+  /* ---------------- load / backfill ---------------- */
+  async function loadAll(){
+    state.goals = await safeGet('meta:goals', { longTerm:[], shortTerm:[] });
+    state.events = await safeGet('meta:events', []);
+    state.summary = await safeGet('stats:daily-summary', []);
+    state.meta = await safeGet('meta:app', { lastActiveDate: null, voiceOnClose: true });
+    if (state.meta.voiceOnClose === undefined) state.meta.voiceOnClose = true;
+    state.today = todayStr();
+    state.day = await safeGet('day:'+state.today, { tasks:[], reflection:'', closedOut:false, closedAt:null });
+    state.day.tasks.forEach(function(t){ if(t.weight==null) t.weight = 2; });
+    await backfill();
+    await discoverLogYears();
+    await loadLogYear(new Date().getFullYear());
+  }
+
+  async function backfill(){
+    var last = state.meta.lastActiveDate;
+    var today = state.today;
+    if(!last){ state.meta.lastActiveDate = today; await safeSet('meta:app', state.meta); return; }
+    if(last === today) return;
+
+    if (summaryIndex(last) === -1){
+      var lastRec = await safeGet('day:'+last, null);
+      if (lastRec){
+        var planned = lastRec.tasks.length;
+        var completed = lastRec.tasks.filter(function(t){return t.completed;}).length;
+        var pw = lastRec.tasks.reduce(function(s,t){return s+(t.weight||2);},0);
+        var cw = lastRec.tasks.filter(function(t){return t.completed;}).reduce(function(s,t){return s+(t.weight||2);},0);
+        upsertSummary({ date:last, planned:planned, completed:completed, plannedWeight:pw, completedWeight:cw,
+          rate: planned? completed/planned : 0, closedOut: !!lastRec.closedOut });
+      } else {
+        upsertSummary({ date:last, planned:0, completed:0, plannedWeight:0, completedWeight:0, rate:0, closedOut:false });
+      }
+    }
+    var d = addDays(last, 1);
+    while (d < today){
+      if (summaryIndex(d) === -1){
+        upsertSummary({ date:d, planned:0, completed:0, plannedWeight:0, completedWeight:0, rate:0, closedOut:false });
+      }
+      d = addDays(d, 1);
+    }
+    state.meta.lastActiveDate = today;
+    await safeSet('stats:daily-summary', state.summary);
+    await safeSet('meta:app', state.meta);
+  }
+
+  function saveGoals(){ return safeSet('meta:goals', state.goals); }
+  function saveEvents(){ return safeSet('meta:events', state.events); }
+  function saveDay(){ return safeSet('day:'+state.today, state.day); }
+  function saveSummary(){ return safeSet('stats:daily-summary', state.summary); }
+
+  async function discoverLogYears(){
+    try{
+      var res = await window.storage.list('log:', false);
+      var keys = (res && res.keys) ? res.keys : [];
+      state.logYearsAvailable = keys.map(function(k){ return k.split(':')[1]; }).filter(Boolean).sort().reverse();
+    }catch(e){ state.logYearsAvailable = []; }
+  }
+  async function loadLogYear(year){
+    var y = String(year);
+    if (state.logYearsLoaded.indexOf(y) >= 0) return;
+    var entries = await safeGet('log:'+y, []);
+    state.logYears[y] = entries;
+    state.logYearsLoaded.push(y);
+    if (state.logYearsAvailable.indexOf(y) === -1) state.logYearsAvailable.push(y);
+    state.logYearsAvailable.sort().reverse();
+  }
+  function saveLogYear(year){ return safeSet('log:'+year, state.logYears[String(year)] || []); }
+
+  function syncTodaySummary(){
+    var planned = state.day.tasks.length;
+    var completed = state.day.tasks.filter(function(t){return t.completed;}).length;
+    var plannedWeight = state.day.tasks.reduce(function(s,t){return s+(t.weight||2);},0);
+    var completedWeight = state.day.tasks.filter(function(t){return t.completed;}).reduce(function(s,t){return s+(t.weight||2);},0);
+    upsertSummary({
+      date: state.today, planned: planned, completed: completed,
+      plannedWeight: plannedWeight, completedWeight: completedWeight,
+      rate: planned ? completed/planned : 0, closedOut: state.day.closedOut
+    });
+  }
+
+  /* ---------------- streaks / stats ---------------- */
+  function computeStats(){
+    var summary = state.summary.slice();
+    var idx = -1;
+    for (var i=0;i<summary.length;i++){ if(summary[i].date===state.today) idx=i; }
+    var todayPlanned = state.day.tasks.length;
+    var todayCompleted = state.day.tasks.filter(function(t){return t.completed;}).length;
+    var todayPW = state.day.tasks.reduce(function(s,t){return s+(t.weight||2);},0);
+    var todayCW = state.day.tasks.filter(function(t){return t.completed;}).reduce(function(s,t){return s+(t.weight||2);},0);
+    var todayEntry = { date: state.today, planned: todayPlanned, completed: todayCompleted,
+      plannedWeight: todayPW, completedWeight: todayCW,
+      rate: todayPlanned? todayCompleted/todayPlanned:0, closedOut: state.day.closedOut };
+    if(idx>=0) summary[idx] = todayEntry; else summary.push(todayEntry);
+    summary.sort(function(a,b){ return a.date < b.date ? -1:1; });
+
+    var showUp=0, showUpBest=0, perfect=0, perfectBest=0;
+    var totalPlanned=0, totalCompleted=0, totalPW=0, totalCW=0, daysLogged=0;
+    for (var j=0;j<summary.length;j++){
+      var e = summary[j];
+      totalPlanned += e.planned; totalCompleted += e.completed;
+      totalPW += (e.plannedWeight||0); totalCW += (e.completedWeight||0);
+      if(e.planned>0 || e.closedOut) daysLogged++;
+      if(e.closedOut){ showUp++; showUpBest=Math.max(showUpBest, showUp); } else { showUp=0; }
+      if(e.planned>0 && e.completed>=e.planned){ perfect++; perfectBest=Math.max(perfectBest, perfect); } else { perfect=0; }
+    }
+    return {
+      summary: summary,
+      showUpStreak: showUp, showUpBest: showUpBest,
+      perfectStreak: perfect, perfectBest: perfectBest,
+      lifetimeRate: totalPlanned? Math.round((totalCompleted/totalPlanned)*100) : 0,
+      weightedRate: totalPW? Math.round((totalCW/totalPW)*100) : 0,
+      totalPlanned: totalPlanned, totalCompleted: totalCompleted, daysLogged: daysLogged
+    };
+  }
+
+  /* ---------------- rendering: shell ---------------- */
+  var root = document.getElementById('viewRoot');
+  var streakBadge = document.getElementById('streakBadge');
+
+  function render(){
+    document.querySelectorAll('.tab').forEach(function(t){
+      t.classList.toggle('active', t.dataset.tab === state.activeTab);
+    });
+    var stats = computeStats();
+    streakBadge.innerHTML = '<b>'+stats.showUpStreak+' day'+(stats.showUpStreak===1?'':'s')+'</b>current streak';
+    if (state.activeTab === 'today') root.innerHTML = renderToday();
+    else if (state.activeTab === 'goals') root.innerHTML = renderGoals();
+    else if (state.activeTab === 'log') root.innerHTML = renderLog();
+    else root.innerHTML = renderHistory(stats);
+    bindDynamic();
+  }
+
+  /* ---------------- Today ---------------- */
+  function goalOptionsHtml(selectedRef){
+    var out = '<option value="">— no goal linked —</option>';
+    state.goals.longTerm.filter(function(g){return !g.archived;}).forEach(function(g){
+      var sel = selectedRef && selectedRef.type==='long' && selectedRef.id===g.id ? ' selected' : '';
+      out += '<option value="long:'+g.id+'"'+sel+'>◆ '+escapeHtml(g.title)+'</option>';
+    });
+    state.goals.shortTerm.filter(function(g){return !g.archived;}).forEach(function(g){
+      var sel = selectedRef && selectedRef.type==='short' && selectedRef.id===g.id ? ' selected' : '';
+      out += '<option value="short:'+g.id+'"'+sel+'>· '+escapeHtml(g.title)+'</option>';
+    });
+    return out;
+  }
+
+  function renderToday(){
+    var tasks = state.day.tasks;
+    var planned = tasks.length;
+    var completed = tasks.filter(function(t){return t.completed;}).length;
+    var rate = planned ? Math.round((completed/planned)*100) : 0;
+
+    var rowsHtml = tasks.map(function(t, i){
+      var g = t.goalRef ? findGoal(t.goalRef) : null;
+      var weightTag = (t.weight && t.weight!==2) ? '<span class="row-tag" style="background:var(--sheet-2);color:var(--ink-soft);">'+(t.weight===1?'quick':'big promise')+'</span>' : '';
+      return '' +
+      '<div class="row'+(t.completed?' done':'')+'" data-task="'+t.id+'">' +
+        '<div class="row-idx">'+pad(i+1)+'</div>' +
+        '<button class="tick'+(t.completed?' done':'')+'" data-action="toggle" data-id="'+t.id+'" aria-label="Mark complete">' +
+          '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</button>' +
+        '<div class="row-body">' +
+          '<div class="row-text">'+escapeHtml(t.text)+'</div>' +
+          (g ? '<span class="row-tag">'+ (t.goalRef.type==='long'?'◆ ':'· ') + escapeHtml(g.title)+'</span>' : '') + weightTag +
+        '</div>' +
+        (state.day.closedOut ? '' : '<button class="row-del" data-action="delete" data-id="'+t.id+'" aria-label="Delete entry">×</button>') +
+      '</div>';
+    }).join('');
+
+    var addRow = state.day.closedOut ? '' : (
+      '<div class="add-row">' +
+        '<input type="text" id="newTaskInput" placeholder="Add today&#39;s entry…" maxlength="140">' +
+        '<select id="newTaskWeight" title="how big a promise is this">' +
+          '<option value="1">Quick</option>' +
+          '<option value="2" selected>Standard</option>' +
+          '<option value="3">Big</option>' +
+        '</select>' +
+        '<select id="newTaskGoal">'+goalOptionsHtml(null)+'</select>' +
+        '<button class="btn" id="addTaskBtn">Add</button>' +
+      '</div>'
+    );
+
+    var closeBlock;
+    if (state.day.closedOut){
+      var stampColor = rate>=100 ? 'var(--teal)' : (rate>=50 ? 'var(--brass)' : 'var(--brick)');
+      closeBlock = '<div class="close-block" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">' +
+        '<div class="stamp" style="--stamp-c:'+stampColor+'">CLOSED<span class="big">'+completed+' / '+planned+' KEPT</span></div>' +
+        '<button class="btn ghost small" data-action="reopen">Reopen today</button>' +
+      '</div>';
+      if (state.day.reflection){
+        closeBlock += '<p class="section-sub" style="margin-top:14px;">Note: '+escapeHtml(state.day.reflection)+'</p>';
+      }
+    } else {
+      closeBlock = '<div class="close-block">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">' +
+          '<div class="section-sub" style="margin:0;">Close out the day to lock today&#39;s entries into the ledger.</div>' +
+          '<button class="btn" data-action="close-day">Close out today</button>' +
+        '</div>' +
+        '<textarea class="reflect" id="reflectInput" placeholder="Optional: what got in the way, if anything?">'+escapeHtml(state.day.reflection||'')+'</textarea>' +
+      '</div>';
+    }
+
+    var listBlock = tasks.length ?
+      '<div class="ledger-rows">'+rowsHtml+'</div>' :
+      '<div class="empty"><div class="big">Blank page.</div>Write down what you&#39;re actually going to do today.</div>';
+
+    return '' +
+      '<h2 class="section-title">'+prettyDate(state.today)+'</h2>' +
+      '<p class="section-sub">Entry '+ (state.day.closedOut? 'closed' : 'open') +' · '+planned+' planned</p>' +
+      '<div class="balance">' +
+        '<div class="count">'+completed+'<span> / '+planned+' kept</span></div>' +
+        '<div class="balance-track"><div class="balance-fill" style="width:'+rate+'%"></div></div>' +
+        '<button class="link-btn" data-action="speak-today">'+speakerIcon()+'hear it</button>' +
+      '</div>' +
+      listBlock +
+      addRow +
+      closeBlock;
+  }
+
+  /* ---------------- Goals + Countdowns ---------------- */
+  function goalProgress(g, type){
+    var planned = (g.stats && g.stats.planned) || 0;
+    var completed = (g.stats && g.stats.completed) || 0;
+    if (type==='long'){
+      state.goals.shortTerm.forEach(function(s){
+        if (s.parentGoalId === g.id){
+          planned += (s.stats && s.stats.planned) || 0;
+          completed += (s.stats && s.stats.completed) || 0;
+        }
+      });
+    }
+    return { planned:planned, completed:completed, pct: pct(completed, planned) };
+  }
+
+  function goalCard(g, type){
+    var prog = goalProgress(g, type);
+    var canDelete = !g.stats || !g.stats.planned;
+    var targetDate = g.targetDate || '';
+    var meta;
+    if (targetDate){
+      meta = 'target '+prettyDate(targetDate);
+      if (type==='long' && g.targetLabel) meta += ' · '+escapeHtml(g.targetLabel);
+    } else {
+      meta = type==='long' ? (g.targetLabel ? escapeHtml(g.targetLabel) : 'no target set') : 'no date set';
+    }
+    var parentTag = '';
+    if (type==='short' && g.parentGoalId){
+      var p = findGoal({type:'long', id:g.parentGoalId});
+      if(p) parentTag = ' · ladders to <b>'+escapeHtml(p.title)+'</b>';
+    }
+
+    var timerHtml = '';
+    if (targetDate){
+      var isDone = prog.planned > 0 && prog.completed >= prog.planned;
+      var cd = formatCountdown(targetDate, null);
+      var days = daysUntil(targetDate, null);
+      var color = isDone ? 'var(--teal)' : deadlineColor(days, cd.passed);
+      var label;
+      if (cd.text === 'today') label = isDone ? 'done, was due today' : 'due today';
+      else if (cd.passed) label = isDone ? ('done, '+cd.text+' after the deadline') : (cd.text+' overdue');
+      else label = (isDone ? 'done with '+cd.text+' to spare' : cd.text+' left');
+      var frac = elapsedFraction(g.createdAt || targetDate, targetDate, null);
+      timerHtml = '' +
+        '<div style="margin-top:10px;">' +
+          '<div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:'+color+';">'+label+'</div>' +
+          '<div class="goal-track" style="margin-top:5px;"><div class="goal-fill" style="width:'+Math.round(frac*100)+'%;background:'+color+';"></div></div>' +
+        '</div>';
+    }
+
+    return '' +
+    '<div class="goal-card'+(g.archived?' archived':'')+'" data-goal="'+g.id+'" data-type="'+type+'">' +
+      '<div class="goal-top"><div><div class="goal-title">'+escapeHtml(g.title)+'</div>' +
+      '<div class="goal-meta">'+meta+parentTag+'</div></div></div>' +
+      (g.description ? '<div class="goal-desc">'+escapeHtml(g.description)+'</div>' : '') +
+      timerHtml +
+      '<div class="goal-progress">' +
+        '<div class="goal-track"><div class="goal-fill" style="width:'+prog.pct+'%"></div></div>' +
+        '<div class="goal-pct">'+prog.completed+'/'+prog.planned+'</div>' +
+      '</div>' +
+      '<div class="goal-actions">' +
+        '<button class="link-btn" data-action="edit-goal" data-id="'+g.id+'" data-type="'+type+'">edit</button>' +
+        '<button class="link-btn" data-action="archive-goal" data-id="'+g.id+'" data-type="'+type+'">'+(g.archived?'unarchive':'archive')+'</button>' +
+        (canDelete ? '<button class="link-btn" data-action="delete-goal" data-id="'+g.id+'" data-type="'+type+'">delete</button>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  function countdownCard(ev){
+    var cd = formatCountdown(ev.targetDate, ev.targetTime);
+    var meta = (cd.passed?'was ':'target ') + prettyDate(ev.targetDate) + (ev.targetTime? ' · '+ev.targetTime : '');
+    var suffix = cd.text === 'today' ? '' : (cd.passed ? ' ago' : ' left');
+    var days = daysUntil(ev.targetDate, ev.targetTime);
+    var color = cd.passed ? 'var(--ink-soft)' : deadlineColor(days, false);
+    return '' +
+    '<div class="goal-card" data-event="'+ev.id+'">' +
+      '<div class="goal-top"><div><div class="goal-title">'+escapeHtml(ev.title)+'</div>' +
+      '<div class="goal-meta">'+meta+'</div></div></div>' +
+      (ev.note ? '<div class="goal-desc">'+escapeHtml(ev.note)+'</div>' : '') +
+      '<div style="margin-top:10px;font-family:var(--font-mono);font-size:20px;font-weight:600;color:'+color+';">' +
+        cd.text + suffix +
+      '</div>' +
+      '<div class="goal-actions">' +
+        '<button class="link-btn" data-action="edit-event" data-id="'+ev.id+'">edit</button>' +
+        '<button class="link-btn" data-action="delete-event" data-id="'+ev.id+'">delete</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderGoals(){
+    var lt = state.goals.longTerm, st = state.goals.shortTerm;
+    var ltActive = lt.filter(function(g){return !g.archived;});
+    var stActive = st.filter(function(g){return !g.archived;});
+    var ltArchived = lt.filter(function(g){return g.archived;});
+    var stArchived = st.filter(function(g){return g.archived;});
+
+    var ltHtml = ltActive.length ? ltActive.map(function(g){return goalCard(g,'long');}).join('')
+      : '<div class="empty" style="padding:24px;">No long-range goals yet.</div>';
+    var stHtml = stActive.length ? stActive.map(function(g){return goalCard(g,'short');}).join('')
+      : '<div class="empty" style="padding:24px;">No short-range goals yet.</div>';
+
+    var archivedHtml = '';
+    if (ltArchived.length || stArchived.length){
+      archivedHtml = '<details style="margin-top:8px;"><summary class="section-sub" style="cursor:pointer;">Archived goals ('+(ltArchived.length+stArchived.length)+')</summary>' +
+        ltArchived.map(function(g){return goalCard(g,'long');}).join('') +
+        stArchived.map(function(g){return goalCard(g,'short');}).join('') +
+        '</details>';
+    }
+
+    var evActive = state.events.filter(function(e){ return !formatCountdown(e.targetDate,e.targetTime).passed; })
+      .sort(function(a,b){ return (a.targetDate+(a.targetTime||'00:00')) < (b.targetDate+(b.targetTime||'00:00')) ? -1:1; });
+    var evPassed = state.events.filter(function(e){ return formatCountdown(e.targetDate,e.targetTime).passed; })
+      .sort(function(a,b){ return a.targetDate > b.targetDate ? -1:1; });
+    var evHtml = evActive.length ? evActive.map(countdownCard).join('') : '<div class="empty" style="padding:24px;">No countdowns yet.</div>';
+    var evPassedHtml = evPassed.length ? '<details style="margin-top:8px;"><summary class="section-sub" style="cursor:pointer;">Past ('+evPassed.length+')</summary>'+evPassed.map(countdownCard).join('')+'</details>' : '';
+
+    return '' +
+      '<h2 class="section-title">Goals</h2>' +
+      '<p class="section-sub">Long-range goals ladder down into short-range goals, which your daily entries link to. Give either one a target date and it counts down, turning amber inside 30 days and red inside 7. Countdowns below are separate: fixed dates you&#39;re tracking with no task-linking involved.</p>' +
+
+      '<div class="goal-group">' +
+        '<div class="goal-group-head"><h3 class="group-label">◆ Long-range</h3>' +
+        '<button class="link-btn" data-action="show-form" data-form="long">+ new long-range goal</button></div>' +
+        '<div id="longForm"></div>' +
+        ltHtml +
+      '</div>' +
+
+      '<div class="goal-group">' +
+        '<div class="goal-group-head"><h3 class="group-label">· Short-range</h3>' +
+        '<button class="link-btn" data-action="show-form" data-form="short">+ new short-range goal</button></div>' +
+        '<div id="shortForm"></div>' +
+        stHtml +
+      '</div>' +
+
+      '<div class="goal-group">' +
+        '<div class="goal-group-head"><h3 class="group-label">◷ Countdowns</h3>' +
+        '<button class="link-btn" data-action="show-event-form">+ new countdown</button></div>' +
+        '<div id="eventForm"></div>' +
+        evHtml + evPassedHtml +
+      '</div>' +
+
+      archivedHtml;
+  }
+
+  function goalFormHtml(type, editing){
+    var lt = state.goals.longTerm.filter(function(g){return !g.archived;});
+    var parentOptions = lt.map(function(g){
+      var sel = editing && editing.parentGoalId===g.id ? ' selected':'';
+      return '<option value="'+g.id+'"'+sel+'>'+escapeHtml(g.title)+'</option>';
+    }).join('');
+    var title = editing ? escapeHtml(editing.title) : '';
+    var desc = editing ? escapeHtml(editing.description||'') : '';
+    var extra = type==='long' ?
+      '<div class="field-row">' +
+        '<div><span class="field-label">Target date (drives the countdown)</span><input type="date" id="fDate" value="'+(editing?escapeHtml(editing.targetDate||''):'')+'"></div>' +
+        '<div><span class="field-label">Label (optional)</span><input type="text" id="fTarget" placeholder="e.g. Q4 2026" value="'+(editing?escapeHtml(editing.targetLabel||''):'')+'"></div>' +
+      '</div>'
+      :
+      '<div class="field-row">' +
+        '<div><span class="field-label">Due date</span><input type="date" id="fDate" value="'+(editing?escapeHtml(editing.targetDate||''):'')+'"></div>' +
+        '<div><span class="field-label">Ladders to (optional)</span><select id="fParent"><option value="">— none —</option>'+parentOptions+'</select></div>' +
+      '</div>';
+    return '' +
+      '<div class="inline-form">' +
+        '<div class="field-row"><div><span class="field-label">Title</span><input type="text" id="fTitle" maxlength="90" value="'+title+'" placeholder="What are you going for?"></div></div>' +
+        extra +
+        '<div class="field-row"><div><span class="field-label">Notes (optional)</span><input type="text" id="fDesc" value="'+desc+'"></div></div>' +
+        '<div style="display:flex;gap:8px;"><button class="btn small" data-action="save-goal" data-type="'+type+'" data-editing="'+(editing?editing.id:'')+'">'+(editing?'Save changes':'Add goal')+'</button>' +
+        '<button class="btn ghost small" data-action="cancel-form" data-form="'+type+'">Cancel</button></div>' +
+      '</div>';
+  }
+
+  function eventFormHtml(editing){
+    var title = editing?escapeHtml(editing.title):'';
+    var date = editing?escapeHtml(editing.targetDate||''):'';
+    var time = editing?escapeHtml(editing.targetTime||''):'';
+    var note = editing?escapeHtml(editing.note||''):'';
+    return '' +
+    '<div class="inline-form">' +
+      '<div class="field-row"><div><span class="field-label">Title</span><input type="text" id="evTitle" maxlength="90" value="'+title+'" placeholder="What are you counting down to?"></div></div>' +
+      '<div class="field-row">' +
+        '<div><span class="field-label">Target date</span><input type="date" id="evDate" value="'+date+'"></div>' +
+        '<div><span class="field-label">Time (optional)</span><input type="time" id="evTime" value="'+time+'"></div>' +
+      '</div>' +
+      '<div class="field-row"><div><span class="field-label">Note (optional)</span><input type="text" id="evNote" value="'+note+'"></div></div>' +
+      '<div style="display:flex;gap:8px;"><button class="btn small" data-action="save-event" data-editing="'+(editing?editing.id:'')+'">'+(editing?'Save changes':'Add countdown')+'</button>' +
+      '<button class="btn ghost small" data-action="cancel-event-form">Cancel</button></div>' +
+    '</div>';
+  }
+
+  /* ---------------- Log ---------------- */
+  function logEntriesForYear(y){ return (state.logYears[String(y)]||[]).slice(); }
+
+  function logRowHtml(e){
+    var createdMs = new Date(e.createdAt).getTime();
+    var unlockMs = createdMs + 24*3600*1000;
+    var editable = Date.now() < unlockMs;
+    var timeStr = new Date(e.createdAt).toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'});
+    if (state.editingLogId === e.id){
+      return '<div class="row" style="display:block;">' +
+        '<textarea class="reflect" id="editLogText" style="width:100%;margin-top:0;">'+escapeHtml(e.text)+'</textarea>' +
+        '<div style="margin-top:6px;display:flex;gap:8px;">' +
+          '<button class="btn small" data-action="save-log-edit" data-id="'+e.id+'">Save</button>' +
+          '<button class="btn ghost small" data-action="cancel-log-edit">Cancel</button>' +
+        '</div></div>';
+    }
+    return '<div class="row" style="align-items:flex-start;">' +
+      '<div class="row-idx" style="width:54px;font-size:11px;">'+timeStr+'</div>' +
+      '<div class="row-body"><div class="row-text">'+escapeHtml(e.text)+'</div>' +
+        (e.editedAt ? '<span class="row-tag" style="background:var(--sheet-2);color:var(--ink-soft);">edited</span>' : '') +
+      '</div>' +
+      (editable ?
+        '<button class="row-del" style="font-size:12px;" data-action="edit-log" data-id="'+e.id+'">edit</button>' +
+        '<button class="row-del" data-action="delete-log" data-id="'+e.id+'">×</button>'
+        : '<span title="locked" style="color:var(--ink-faint);flex-shrink:0;">'+lockIcon()+'</span>') +
+    '</div>';
+  }
+
+  function renderLog(){
+    var currentYear = String(new Date().getFullYear());
+    var years = state.logYearsAvailable.slice();
+    if (years.indexOf(currentYear) === -1) years.unshift(currentYear);
+    years = years.filter(function(v,i,a){ return a.indexOf(v)===i; }).sort().reverse();
+
+    var byDate = {};
+    years.forEach(function(y){
+      if (state.logYearsLoaded.indexOf(y) >= 0){
+        logEntriesForYear(y).forEach(function(e){
+          if (!byDate[e.dateFor]) byDate[e.dateFor] = [];
+          byDate[e.dateFor].push(e);
+        });
+      }
+    });
+    var dates = Object.keys(byDate).sort().reverse();
+    var groupsHtml = dates.map(function(d){
+      var entries = byDate[d].slice().sort(function(a,b){ return b.createdAt < a.createdAt ? -1:1; });
+      return '<div style="margin-bottom:18px;">' +
+        '<div class="log-date-head">'+prettyDate(d)+'</div>' +
+        entries.map(logRowHtml).join('') +
+      '</div>';
+    }).join('');
+
+    var unloadedYears = state.logYearsAvailable.filter(function(y){ return state.logYearsLoaded.indexOf(y)===-1; });
+    var loadMoreHtml = unloadedYears.length ?
+      '<div style="text-align:center;margin-top:10px;"><button class="link-btn" data-action="load-log-year" data-year="'+unloadedYears[0]+'">load '+unloadedYears[0]+'</button></div>' : '';
+
+    return '' +
+      '<h2 class="section-title">Log</h2>' +
+      '<p class="section-sub">Write something down and it stays. Editable for 24 hours, then permanent, no exceptions.</p>' +
+      '<div class="inline-form">' +
+        '<div class="field-row"><div><span class="field-label">About date</span><input type="date" id="logDate" value="'+state.today+'"></div></div>' +
+        '<textarea class="reflect" id="logText" style="width:100%;min-height:70px;margin-top:0;" placeholder="What do you want on the record?"></textarea>' +
+        '<div style="margin-top:8px;"><button class="btn small" data-action="save-log">Save entry</button></div>' +
+      '</div>' +
+      (dates.length ? groupsHtml : '<div class="empty">Nothing written yet.</div>') +
+      loadMoreHtml;
+  }
+
+  function findLogEntry(id){
+    for (var y in state.logYears){
+      var list = state.logYears[y];
+      for (var i=0;i<list.length;i++){ if(list[i].id===id) return {entry:list[i], year:y}; }
+    }
+    return null;
+  }
+  function handleSaveLog(){
+    var dateInput = document.getElementById('logDate');
+    var textInput = document.getElementById('logText');
+    var text = (textInput.value||'').trim();
+    if (!text) return;
+    var dateFor = dateInput.value || state.today;
+    var now = new Date();
+    var year = String(now.getFullYear());
+    if (state.logYearsLoaded.indexOf(year) === -1){
+      state.logYears[year] = []; state.logYearsLoaded.push(year);
+      if(state.logYearsAvailable.indexOf(year)===-1) state.logYearsAvailable.push(year);
+    }
+    var entry = { id: uid(), dateFor: dateFor, text: text.slice(0,600), createdAt: now.toISOString(), editedAt: null };
+    state.logYears[year].push(entry);
+    saveLogYear(year);
+    render();
+    toast('Locked in. Editable for 24 hours.');
+  }
+  function handleEditLog(id){
+    var found = findLogEntry(id);
+    if (!found) return;
+    var createdMs = new Date(found.entry.createdAt).getTime();
+    if (Date.now() >= createdMs + 24*3600*1000){ toast('This entry is locked'); return; }
+    state.editingLogId = id;
+    render();
+  }
+  function handleSaveLogEdit(id){
+    var found = findLogEntry(id);
+    if (!found) return;
+    var ta = document.getElementById('editLogText');
+    var text = (ta.value||'').trim();
+    if (!text) return;
+    found.entry.text = text.slice(0,600);
+    found.entry.editedAt = new Date().toISOString();
+    state.editingLogId = null;
+    saveLogYear(found.year);
+    render();
+  }
+  function handleDeleteLog(id){
+    var found = findLogEntry(id);
+    if (!found) return;
+    var createdMs = new Date(found.entry.createdAt).getTime();
+    if (Date.now() >= createdMs + 24*3600*1000){ toast('This entry is locked and cannot be deleted'); return; }
+    showConfirm('Delete this entry?', 'It is still inside the 24 hour window, so this is allowed. After that it cannot be undone.', function(){
+      state.logYears[found.year] = state.logYears[found.year].filter(function(x){return x.id!==id;});
+      saveLogYear(found.year);
+      render();
+    });
+  }
+
+  /* ---------------- History ---------------- */
+  function renderHistory(stats){
+    var days = 98;
+    var cells = [];
+    for (var i=days-1; i>=0; i--){
+      var d = addDays(state.today, -i);
+      var e = null;
+      for (var j=0;j<stats.summary.length;j++){ if(stats.summary[j].date===d){ e=stats.summary[j]; break; } }
+      cells.push({ date:d, e:e });
+    }
+    var heatHtml = cells.map(function(c){
+      var color = 'var(--sheet-2)';
+      var title = c.date+': no entry';
+      if (c.e && c.e.planned>0){
+        var r = c.e.rate;
+        color = r>=1 ? 'var(--teal)' : r>=0.5 ? 'var(--brass)' : 'var(--brick)';
+        title = c.date+': '+c.e.completed+'/'+c.e.planned+' kept';
+      } else if (c.e && c.e.closedOut){
+        color = 'var(--rule-strong)';
+        title = c.date+': closed, nothing planned';
+      }
+      return '<div class="heat-cell" style="background:'+color+'" title="'+title+'"></div>';
+    }).join('');
+
+    var recentRows = stats.summary.slice().reverse().slice(0,16).map(function(e){
+      var rateColor = e.planned===0 ? 'var(--ink-faint)' : (e.rate>=1 ? 'var(--teal)':(e.rate>=0.5?'var(--brass)':'var(--brick)'));
+      var rateBg = e.planned===0 ? 'var(--sheet-2)' : (e.rate>=1 ? 'var(--teal-light)':(e.rate>=0.5?'var(--brass-light)':'var(--brick-light)'));
+      return '<tr><td>'+prettyDate(e.date)+'</td><td>'+e.planned+'</td><td>'+e.completed+'</td>' +
+        '<td><span class="rate-pill" style="color:'+rateColor+';background:'+rateBg+'">'+pct(e.completed,e.planned)+'%</span></td>' +
+        '<td>'+(e.closedOut?'closed':(e.planned>0?'open':'—'))+'</td></tr>';
+    }).join('');
+
+    return '' +
+      '<h2 class="section-title">History</h2>' +
+      '<p class="section-sub">Every day gets logged, closed or not. Nothing quietly disappears.</p>' +
+      '<div class="stat-grid">' +
+        '<div class="stat-card"><div class="num">'+stats.showUpStreak+'</div><div class="lbl">Show-up streak</div></div>' +
+        '<div class="stat-card"><div class="num">'+stats.perfectStreak+'</div><div class="lbl">Perfect streak</div></div>' +
+        '<div class="stat-card"><div class="num">'+stats.showUpBest+'</div><div class="lbl">Best show-up run</div></div>' +
+        '<div class="stat-card"><div class="num">'+stats.perfectBest+'</div><div class="lbl">Best perfect run</div></div>' +
+        '<div class="stat-card"><div class="num">'+stats.lifetimeRate+'%</div><div class="lbl">Lifetime follow-through</div></div>' +
+        '<div class="stat-card"><div class="num">'+stats.weightedRate+'%</div><div class="lbl">Weighted follow-through</div></div>' +
+        '<div class="stat-card"><div class="num">'+stats.totalCompleted+'/'+stats.totalPlanned+'</div><div class="lbl">Kept / promised, all time</div></div>' +
+      '</div>' +
+      '<div style="margin-bottom:18px;"><button class="link-btn" data-action="speak-history">'+speakerIcon()+'hear lifetime stats</button></div>' +
+      '<div class="heat-wrap"><div class="heat-grid">'+heatHtml+'</div>' +
+        '<div class="heat-legend">less' +
+          '<div class="heat-cell" style="background:var(--sheet-2)"></div>' +
+          '<div class="heat-cell" style="background:var(--brick)"></div>' +
+          '<div class="heat-cell" style="background:var(--brass)"></div>' +
+          '<div class="heat-cell" style="background:var(--teal)"></div>' +
+        'more</div>' +
+      '</div>' +
+      (recentRows ?
+        '<table class="hist-table"><thead><tr><th>Date</th><th>Planned</th><th>Kept</th><th>Rate</th><th>Status</th></tr></thead><tbody>'+recentRows+'</tbody></table>'
+        : '<div class="empty">No days logged yet. Close out today to start the ledger.</div>');
+  }
+
+  /* ---------------- modal ---------------- */
+  function showConfirm(title, msg, onYes){
+    var modalRoot = document.getElementById('modalRoot');
+    modalRoot.innerHTML =
+      '<div class="modal-bg" id="modalBg"><div class="modal">' +
+        '<h3>'+escapeHtml(title)+'</h3><p>'+escapeHtml(msg)+'</p>' +
+        '<div class="row-btns"><button class="btn ghost small" id="modalCancel">Cancel</button>' +
+        '<button class="btn danger small" id="modalOk">Confirm</button></div>' +
+      '</div></div>';
+    document.getElementById('modalCancel').onclick = function(){ modalRoot.innerHTML=''; };
+    document.getElementById('modalBg').addEventListener('click', function(e){ if(e.target.id==='modalBg') modalRoot.innerHTML=''; });
+    document.getElementById('modalOk').onclick = function(){ modalRoot.innerHTML=''; onYes(); };
+  }
+
+  /* ---------------- events (bind + handlers) ---------------- */
+  function bindDynamic(){
+    var addBtn = document.getElementById('addTaskBtn');
+    if (addBtn){
+      addBtn.onclick = handleAddTask;
+      document.getElementById('newTaskInput').addEventListener('keydown', function(e){ if(e.key==='Enter') handleAddTask(); });
+    }
+    var reflectInput = document.getElementById('reflectInput');
+    if (reflectInput){
+      reflectInput.addEventListener('change', function(){ state.day.reflection = reflectInput.value.slice(0,300); saveDay(); });
+    }
+    root.querySelectorAll('[data-action="toggle"]').forEach(function(el){ el.onclick = function(){ toggleTask(el.dataset.id); }; });
+    root.querySelectorAll('[data-action="delete"]').forEach(function(el){ el.onclick = function(){ deleteTask(el.dataset.id); }; });
+    var closeBtn = root.querySelector('[data-action="close-day"]'); if (closeBtn) closeBtn.onclick = closeDay;
+    var reopenBtn = root.querySelector('[data-action="reopen"]'); if (reopenBtn) reopenBtn.onclick = reopenDay;
+    var speakToday = root.querySelector('[data-action="speak-today"]'); if (speakToday) speakToday.onclick = function(){ speak(speechForToday()); };
+    var speakHistory = root.querySelector('[data-action="speak-history"]'); if (speakHistory) speakHistory.onclick = function(){ speak(speechForHistory(computeStats())); };
+
+    root.querySelectorAll('[data-action="show-form"]').forEach(function(el){
+      el.onclick = function(){
+        var f = el.dataset.form;
+        document.getElementById(f+'Form').innerHTML = goalFormHtml(f, null);
+        bindFormButtons();
+      };
+    });
+    root.querySelectorAll('[data-action="edit-goal"]').forEach(function(el){
+      el.onclick = function(){
+        var type = el.dataset.type, id = el.dataset.id;
+        var list = type==='long' ? state.goals.longTerm : state.goals.shortTerm;
+        var g = list.find(function(x){return x.id===id;});
+        document.getElementById(type+'Form').innerHTML = goalFormHtml(type, g);
+        bindFormButtons();
+      };
+    });
+    root.querySelectorAll('[data-action="archive-goal"]').forEach(function(el){
+      el.onclick = function(){
+        var type = el.dataset.type, id = el.dataset.id;
+        var list = type==='long' ? state.goals.longTerm : state.goals.shortTerm;
+        var g = list.find(function(x){return x.id===id;});
+        g.archived = !g.archived;
+        saveGoals(); render();
+      };
+    });
+    root.querySelectorAll('[data-action="delete-goal"]').forEach(function(el){
+      el.onclick = function(){
+        var type = el.dataset.type, id = el.dataset.id;
+        showConfirm('Delete goal?', 'This removes it permanently. Past entries keep their own text either way.', function(){
+          if (type==='long'){
+            state.goals.longTerm = state.goals.longTerm.filter(function(x){return x.id!==id;});
+            state.goals.shortTerm.forEach(function(s){ if(s.parentGoalId===id) s.parentGoalId=null; });
+          } else {
+            state.goals.shortTerm = state.goals.shortTerm.filter(function(x){return x.id!==id;});
+          }
+          saveGoals(); render();
+        });
+      };
+    });
+    bindFormButtons();
+
+    root.querySelectorAll('[data-action="show-event-form"]').forEach(function(el){
+      el.onclick = function(){ document.getElementById('eventForm').innerHTML = eventFormHtml(null); bindEventFormButtons(); };
+    });
+    root.querySelectorAll('[data-action="edit-event"]').forEach(function(el){
+      el.onclick = function(){
+        var ev = state.events.find(function(x){return x.id===el.dataset.id;});
+        document.getElementById('eventForm').innerHTML = eventFormHtml(ev);
+        bindEventFormButtons();
+      };
+    });
+    root.querySelectorAll('[data-action="delete-event"]').forEach(function(el){
+      el.onclick = function(){
+        var id = el.dataset.id;
+        showConfirm('Delete countdown?', 'This removes it for good.', function(){
+          state.events = state.events.filter(function(x){return x.id!==id;});
+          saveEvents(); render();
+        });
+      };
+    });
+    bindEventFormButtons();
+
+    var saveLogBtn = root.querySelector('[data-action="save-log"]'); if (saveLogBtn) saveLogBtn.onclick = handleSaveLog;
+    root.querySelectorAll('[data-action="edit-log"]').forEach(function(el){ el.onclick = function(){ handleEditLog(el.dataset.id); }; });
+    root.querySelectorAll('[data-action="delete-log"]').forEach(function(el){ el.onclick = function(){ handleDeleteLog(el.dataset.id); }; });
+    var saveEditBtn = root.querySelector('[data-action="save-log-edit"]'); if (saveEditBtn) saveEditBtn.onclick = function(){ handleSaveLogEdit(saveEditBtn.dataset.id); };
+    var cancelEditBtn = root.querySelector('[data-action="cancel-log-edit"]'); if (cancelEditBtn) cancelEditBtn.onclick = function(){ state.editingLogId=null; render(); };
+    var loadYearBtn = root.querySelector('[data-action="load-log-year"]');
+    if (loadYearBtn) loadYearBtn.onclick = async function(){ await loadLogYear(loadYearBtn.dataset.year); render(); };
+  }
+
+  function bindFormButtons(){
+    root.querySelectorAll('[data-action="cancel-form"]').forEach(function(el){
+      el.onclick = function(){ document.getElementById(el.dataset.form+'Form').innerHTML = ''; };
+    });
+    root.querySelectorAll('[data-action="save-goal"]').forEach(function(el){
+      el.onclick = function(){ saveGoalForm(el.dataset.type, el.dataset.editing || null); };
+    });
+  }
+  function bindEventFormButtons(){
+    var saveBtn = root.querySelector('[data-action="save-event"]');
+    if (saveBtn) saveBtn.onclick = function(){ saveEventForm(saveBtn.dataset.editing || null); };
+    var cancelBtn = root.querySelector('[data-action="cancel-event-form"]');
+    if (cancelBtn) cancelBtn.onclick = function(){ document.getElementById('eventForm').innerHTML=''; };
+  }
+
+  function saveGoalForm(type, editingId){
+    var title = (document.getElementById('fTitle').value || '').trim();
+    if (!title){ toast('Give it a title first'); return; }
+    var desc = (document.getElementById('fDesc').value || '').trim();
+    var list = type==='long' ? state.goals.longTerm : state.goals.shortTerm;
+    if (editingId){
+      var g = list.find(function(x){return x.id===editingId;});
+      g.title = title; g.description = desc;
+      if (type==='long'){ g.targetLabel = document.getElementById('fTarget').value.trim(); g.targetDate = document.getElementById('fDate').value || ''; }
+      else { g.targetDate = document.getElementById('fDate').value || ''; g.parentGoalId = document.getElementById('fParent').value || null; }
+    } else {
+      var obj = { id: uid(), title: title, description: desc, archived:false, createdAt: todayStr(), stats: { planned:0, completed:0 } };
+      if (type==='long'){ obj.targetLabel = document.getElementById('fTarget').value.trim(); obj.targetDate = document.getElementById('fDate').value || ''; state.goals.longTerm.push(obj); }
+      else { obj.targetDate = document.getElementById('fDate').value || ''; obj.parentGoalId = document.getElementById('fParent').value || null; state.goals.shortTerm.push(obj); }
+    }
+    saveGoals(); render();
+  }
+
+  function saveEventForm(editingId){
+    var title = (document.getElementById('evTitle').value || '').trim();
+    var date = document.getElementById('evDate').value;
+    if (!title || !date){ toast('Title and date are required'); return; }
+    var time = document.getElementById('evTime').value || '';
+    var note = (document.getElementById('evNote').value || '').trim();
+    if (editingId){
+      var ev = state.events.find(function(x){return x.id===editingId;});
+      ev.title=title; ev.targetDate=date; ev.targetTime=time; ev.note=note;
+    } else {
+      state.events.push({ id: uid(), title:title, targetDate:date, targetTime:time, note:note, createdAt:new Date().toISOString() });
+    }
+    saveEvents(); render();
+  }
+
+  function handleAddTask(){
+    var input = document.getElementById('newTaskInput');
+    var sel = document.getElementById('newTaskGoal');
+    var weightSel = document.getElementById('newTaskWeight');
+    var text = input.value.trim();
+    if (!text) return;
+    var goalRef = null;
+    if (sel.value){ var parts = sel.value.split(':'); goalRef = { type: parts[0], id: parts[1] }; }
+    var weight = weightSel ? parseInt(weightSel.value,10) : 2;
+    state.day.tasks.push({ id: uid(), text: text.slice(0,140), completed:false, goalRef: goalRef, weight: weight });
+    if (goalRef) adjustGoalStat(goalRef, 'planned', 1);
+    input.value = '';
+    saveDay(); if (goalRef) saveGoals();
+    syncTodaySummary(); saveSummary();
+    render();
+    var el = document.getElementById('newTaskInput'); if (el) el.focus();
+  }
+
+  function toggleTask(id){
+    var t = state.day.tasks.find(function(x){return x.id===id;});
+    if (!t) return;
+    t.completed = !t.completed;
+    if (t.goalRef) adjustGoalStat(t.goalRef, 'completed', t.completed ? 1 : -1);
+    saveDay(); if (t.goalRef) saveGoals();
+    syncTodaySummary(); saveSummary();
+    render();
+  }
+  function deleteTask(id){
+    var t = state.day.tasks.find(function(x){return x.id===id;});
+    if (!t) return;
+    state.day.tasks = state.day.tasks.filter(function(x){return x.id!==id;});
+    if (t.goalRef){ adjustGoalStat(t.goalRef, 'planned', -1); if (t.completed) adjustGoalStat(t.goalRef, 'completed', -1); }
+    saveDay(); if (t.goalRef) saveGoals();
+    syncTodaySummary(); saveSummary();
+    render();
+  }
+  function closeDay(){
+    var reflectInput = document.getElementById('reflectInput');
+    if (reflectInput) state.day.reflection = reflectInput.value.slice(0,300);
+    state.day.closedOut = true;
+    state.day.closedAt = new Date().toISOString();
+    saveDay();
+    syncTodaySummary(); saveSummary();
+    render();
+    toast('Day closed out.');
+    if (state.meta.voiceOnClose) speak(speechForToday());
+  }
+  function reopenDay(){
+    state.day.closedOut = false;
+    state.day.closedAt = null;
+    saveDay();
+    syncTodaySummary(); saveSummary();
+    render();
+  }
+
+  /* ---------------- tabs / footer ---------------- */
+  document.getElementById('tabs').addEventListener('click', function(e){
+    var btn = e.target.closest('.tab');
+    if (!btn) return;
+    state.activeTab = btn.dataset.tab;
+    render();
+  });
+
+  function wireVoiceToggle(){
+    var v = document.getElementById('voiceToggle');
+    if (!v) return;
+    v.checked = !!state.meta.voiceOnClose;
+    v.onchange = function(){ state.meta.voiceOnClose = v.checked; safeSet('meta:app', state.meta); };
+  }
+
+  document.getElementById('resetBtn').onclick = function(){
+    showConfirm('Reset everything?', 'This permanently deletes every goal, countdown, log entry, and logged day. There is no undo.', async function(){
+      await deleteAllKeys();
+      state = { activeTab:'today', goals:{longTerm:[],shortTerm:[]}, events:[], summary:[], meta:{lastActiveDate:null, voiceOnClose:true},
+        today: todayStr(), day:{tasks:[],reflection:'',closedOut:false,closedAt:null}, logYears:{}, logYearsAvailable:[], logYearsLoaded:[], editingLogId:null };
+      await safeSet('meta:app', state.meta);
+      render();
+      wireVoiceToggle();
+      toast('Ledger reset.');
+    });
+  };
+
+  document.getElementById('exportBtn').onclick = async function(){
+    try{
+      var stats = computeStats();
+      var allLogs = {};
+      for (var y in state.logYears){ allLogs[y] = state.logYears[y]; }
+      var payload = { exportedAt: new Date().toISOString(), todayDate: state.today, goals: state.goals, events: state.events, days: stats.summary, today: state.day, log: allLogs };
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'compound-export-'+state.today+'.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }catch(e){ toast('Export failed'); }
+  };
+
+  document.getElementById('importBtn').onclick = function(){ document.getElementById('importFile').click(); };
+  document.getElementById('importFile').addEventListener('change', function(e){
+    var file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = async function(){
+      try{
+        var data = JSON.parse(reader.result);
+        if (data.goals){ state.goals = data.goals; await saveGoals(); }
+        if (data.events){ state.events = data.events; await saveEvents(); }
+        if (Array.isArray(data.days)){
+          data.days.forEach(function(entry){ upsertSummary(entry); });
+          await saveSummary();
+        }
+        if (data.today && data.todayDate){
+          if (data.todayDate === state.today){
+            state.day = data.today;
+            if (state.day.tasks) state.day.tasks.forEach(function(t){ if (t.weight==null) t.weight = 2; });
+            await saveDay();
+          } else {
+            await safeSet('day:'+data.todayDate, data.today);
+          }
+        }
+        if (data.log){
+          for (var y in data.log){
+            var incoming = data.log[y] || [];
+            var existing = state.logYears[y] || [];
+            var existingIds = {};
+            existing.forEach(function(en){ existingIds[en.id] = true; });
+            var merged = existing.concat(incoming.filter(function(en){ return !existingIds[en.id]; }));
+            state.logYears[y] = merged;
+            if (state.logYearsLoaded.indexOf(y) === -1) state.logYearsLoaded.push(y);
+            if (state.logYearsAvailable.indexOf(y) === -1) state.logYearsAvailable.push(y);
+            await saveLogYear(y);
+          }
+        }
+        render();
+        toast('Import complete.');
+      }catch(err){ toast('Import failed, check the file.'); }
+    };
+    reader.readAsText(file);
+  });
+
+  /* ---------------- boot ---------------- */
+  (async function boot(){
+    await loadAll();
+    render();
+    wireVoiceToggle();
+  })();
+
+})();
+</script>
+</body>
+</html>
