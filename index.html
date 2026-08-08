@@ -150,6 +150,9 @@
     color:var(--ink-soft); border-bottom:1px solid var(--ink); padding:6px 8px; }
   table.hist-table td{ padding:8px; border-bottom:1px solid var(--rule); vertical-align:top; }
   table.hist-table tr:last-child td{ border-bottom:none; }
+  tr.hist-row{ cursor:pointer; }
+  tr.hist-row:hover td{ background:var(--sheet-2); }
+  tr.hist-detail-row td{ border-bottom:1px solid var(--rule); }
   .rate-pill{ font-family:var(--font-mono); font-size:11.5px; font-weight:600; padding:2px 7px; border-radius:2px; display:inline-block; }
   .footbar{ max-width:800px; margin:14px auto 0; padding:0 20px; display:flex; justify-content:space-between; align-items:center;
     font-size:12px; color:var(--ink-faint); flex-wrap:wrap; gap:8px; }
@@ -201,7 +204,7 @@
     <span>
       <label style="cursor:pointer;"><input type="checkbox" id="voiceToggle" style="vertical-align:-2px;margin-right:4px;">voice on close-out</label>
       &nbsp;·&nbsp;
-      <button id="exportBtn">export data</button>
+      <button id="exportBtn">export data</button> <span id="backupLabel" style="color:var(--ink-faint);"></span>
       &nbsp;·&nbsp;
       <button id="importBtn">import data</button>
       <input type="file" id="importFile" accept="application/json" style="display:none;">
@@ -414,13 +417,16 @@
     goals: { longTerm: [], shortTerm: [] },
     events: [],
     summary: [],
-    meta: { lastActiveDate: null, voiceOnClose: true },
+    meta: { lastActiveDate: null, voiceOnClose: true, lastExportAt: null },
     today: todayStr(),
     day: { tasks: [], reflection: '', closedOut: false, closedAt: null },
     logYears: {},
     logYearsAvailable: [],
     logYearsLoaded: [],
-    editingLogId: null
+    editingLogId: null,
+    expandedHistoryDate: null,
+    historyDayCache: {},
+    historyRowLimit: 16
   };
 
   function summaryIndex(date){
@@ -452,6 +458,7 @@
     state.summary = await safeGet('stats:daily-summary', []);
     state.meta = await safeGet('meta:app', { lastActiveDate: null, voiceOnClose: true });
     if (state.meta.voiceOnClose === undefined) state.meta.voiceOnClose = true;
+    if (state.meta.lastExportAt === undefined) state.meta.lastExportAt = null;
     state.today = todayStr();
     state.day = await safeGet('day:'+state.today, { tasks:[], reflection:'', closedOut:false, closedAt:null });
     state.day.tasks.forEach(function(t){ if(t.weight==null) t.weight = 2; });
@@ -981,6 +988,68 @@
   }
 
   /* ---------------- History ---------------- */
+  function sumRange(summary, startDate, endDate){
+    var planned=0, completed=0, closedDays=0, perfectDays=0;
+    var d = startDate;
+    while (d <= endDate){
+      for (var i=0;i<summary.length;i++){
+        if (summary[i].date===d){
+          planned += summary[i].planned; completed += summary[i].completed;
+          if (summary[i].closedOut) closedDays++;
+          if (summary[i].planned>0 && summary[i].completed>=summary[i].planned) perfectDays++;
+          break;
+        }
+      }
+      d = addDays(d,1);
+    }
+    return { planned:planned, completed:completed, rate: planned? Math.round(completed/planned*100):0, closedDays:closedDays, perfectDays:perfectDays };
+  }
+
+  function historyDetailRowHtml(date){
+    var rec = state.historyDayCache[date];
+    var body;
+    if (rec === undefined){
+      body = '<div class="empty" style="padding:16px;">Loading…</div>';
+    } else if (!rec || !rec.tasks || rec.tasks.length===0){
+      body = '<div class="empty" style="padding:16px;">Nothing was written down this day.</div>';
+    } else {
+      body = rec.tasks.map(function(t){
+        var g = t.goalRef ? findGoal(t.goalRef) : null;
+        var mark = t.completed ? '<span style="color:var(--teal);font-weight:600;">&#10003;</span>' : '<span style="color:var(--ink-faint);">&#9675;</span>';
+        var weightTag = (t.weight && t.weight!==2) ? '<span class="row-tag" style="background:var(--sheet-2);color:var(--ink-soft);">'+(t.weight===1?'quick':'big promise')+'</span>' : '';
+        var goalTag = g ? '<span class="row-tag">'+(t.goalRef.type==='long'?'&#9670; ':'&middot; ')+escapeHtml(g.title)+'</span>' : (t.goalRef ? '<span class="row-tag" style="opacity:.6;">linked goal (removed)</span>' : '');
+        return '<div style="display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--rule);">' +
+          '<div style="width:16px;flex-shrink:0;padding-top:1px;">'+mark+'</div>' +
+          '<div style="flex:1;"><div style="font-size:13.5px;'+(t.completed?'color:var(--ink-soft);text-decoration:line-through;text-decoration-color:var(--rule-strong);':'')+'">'+escapeHtml(t.text)+'</div>'+goalTag+weightTag+'</div>' +
+        '</div>';
+      }).join('');
+      if (rec.reflection){
+        body += '<div class="section-sub" style="margin-top:10px;margin-bottom:0;">Note: '+escapeHtml(rec.reflection)+'</div>';
+      }
+    }
+    return '<tr class="hist-detail-row"><td colspan="5" style="background:var(--sheet-2);">' +
+      '<div style="padding:10px 6px;">' +
+        '<div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;">what was written that day &middot; read-only</div>' +
+        body +
+      '</div>' +
+    '</td></tr>';
+  }
+
+  async function toggleHistoryDetail(date){
+    if (state.expandedHistoryDate === date){
+      state.expandedHistoryDate = null;
+      render();
+      return;
+    }
+    state.expandedHistoryDate = date;
+    render();
+    if (!(date in state.historyDayCache)){
+      var rec = await safeGet('day:'+date, null);
+      state.historyDayCache[date] = rec;
+      render();
+    }
+  }
+
   function renderHistory(stats){
     var days = 98;
     var cells = [];
@@ -1004,17 +1073,41 @@
       return '<div class="heat-cell" style="background:'+color+'" title="'+title+'"></div>';
     }).join('');
 
-    var recentRows = stats.summary.slice().reverse().slice(0,16).map(function(e){
+    var thisWeekStart = addDays(state.today, -6);
+    var thisWeek = sumRange(stats.summary, thisWeekStart, state.today);
+    var lastWeekEnd = addDays(thisWeekStart, -1);
+    var lastWeekStart = addDays(lastWeekEnd, -6);
+    var lastWeek = sumRange(stats.summary, lastWeekStart, lastWeekEnd);
+    var trend = thisWeek.rate - lastWeek.rate;
+    var trendText = trend===0 ? 'flat vs the previous 7 days' : ((trend>0?'+':'')+trend+' pts vs the previous 7 days');
+    var trendColor = trend>0 ? 'var(--teal)' : (trend<0 ? 'var(--brick)' : 'var(--ink-soft)');
+    var digestHtml = '' +
+      '<div style="border:1px solid var(--rule-strong);border-radius:var(--radius);padding:14px 16px;background:var(--sheet-2);margin-bottom:20px;">' +
+        '<div class="group-label" style="margin-bottom:8px;">Last 7 days</div>' +
+        '<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">' +
+          '<div style="font-family:var(--font-mono);font-size:26px;font-weight:600;">'+thisWeek.rate+'%</div>' +
+          '<div style="font-family:var(--font-mono);font-size:12.5px;color:'+trendColor+';">'+trendText+'</div>' +
+        '</div>' +
+        '<p class="section-sub" style="margin:6px 0 0;">'+thisWeek.completed+'/'+thisWeek.planned+' kept &middot; showed up '+thisWeek.closedDays+'/7 &middot; perfect '+thisWeek.perfectDays+'/7</p>' +
+      '</div>';
+
+    var visibleEntries = stats.summary.slice().reverse().slice(0, state.historyRowLimit);
+    var recentRows = visibleEntries.map(function(e){
       var rateColor = e.planned===0 ? 'var(--ink-faint)' : (e.rate>=1 ? 'var(--teal)':(e.rate>=0.5?'var(--brass)':'var(--brick)'));
       var rateBg = e.planned===0 ? 'var(--sheet-2)' : (e.rate>=1 ? 'var(--teal-light)':(e.rate>=0.5?'var(--brass-light)':'var(--brick-light)'));
-      return '<tr><td>'+prettyDate(e.date)+'</td><td>'+e.planned+'</td><td>'+e.completed+'</td>' +
+      var row = '<tr class="hist-row" data-action="toggle-history-day" data-date="'+e.date+'">' +
+        '<td>'+prettyDate(e.date)+'</td><td>'+e.planned+'</td><td>'+e.completed+'</td>' +
         '<td><span class="rate-pill" style="color:'+rateColor+';background:'+rateBg+'">'+pct(e.completed,e.planned)+'%</span></td>' +
         '<td>'+(e.closedOut?'closed':(e.planned>0?'open':'—'))+'</td></tr>';
+      if (state.expandedHistoryDate === e.date) row += historyDetailRowHtml(e.date);
+      return row;
     }).join('');
+    var hasMore = stats.summary.length > state.historyRowLimit;
 
     return '' +
       '<h2 class="section-title">History</h2>' +
-      '<p class="section-sub">Every day gets logged, closed or not. Nothing quietly disappears.</p>' +
+      '<p class="section-sub">Every day gets logged, closed or not. Nothing quietly disappears. Tap a row to see what was actually written that day.</p>' +
+      digestHtml +
       '<div class="stat-grid">' +
         '<div class="stat-card"><div class="num">'+stats.showUpStreak+'</div><div class="lbl">Show-up streak</div></div>' +
         '<div class="stat-card"><div class="num">'+stats.perfectStreak+'</div><div class="lbl">Perfect streak</div></div>' +
@@ -1034,7 +1127,8 @@
         'more</div>' +
       '</div>' +
       (recentRows ?
-        '<table class="hist-table"><thead><tr><th>Date</th><th>Planned</th><th>Kept</th><th>Rate</th><th>Status</th></tr></thead><tbody>'+recentRows+'</tbody></table>'
+        '<table class="hist-table"><thead><tr><th>Date</th><th>Planned</th><th>Kept</th><th>Rate</th><th>Status</th></tr></thead><tbody>'+recentRows+'</tbody></table>' +
+        (hasMore ? '<div style="text-align:center;margin-top:10px;"><button class="link-btn" data-action="history-show-more">show more</button></div>' : '')
         : '<div class="empty">No days logged yet. Close out today to start the ledger.</div>');
   }
 
@@ -1069,6 +1163,11 @@
     var reopenBtn = root.querySelector('[data-action="reopen"]'); if (reopenBtn) reopenBtn.onclick = reopenDay;
     var speakToday = root.querySelector('[data-action="speak-today"]'); if (speakToday) speakToday.onclick = function(){ speak(speechForToday()); };
     var speakHistory = root.querySelector('[data-action="speak-history"]'); if (speakHistory) speakHistory.onclick = function(){ speak(speechForHistory(computeStats())); };
+    root.querySelectorAll('[data-action="toggle-history-day"]').forEach(function(el){
+      el.onclick = function(){ toggleHistoryDetail(el.dataset.date); };
+    });
+    var showMoreBtn = root.querySelector('[data-action="history-show-more"]');
+    if (showMoreBtn) showMoreBtn.onclick = function(){ state.historyRowLimit += 16; render(); };
 
     root.querySelectorAll('[data-action="show-form"]').forEach(function(el){
       el.onclick = function(){
@@ -1252,6 +1351,22 @@
     render();
   });
 
+  function relativeTime(iso){
+    if (!iso) return 'never';
+    var days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    if (days <= 0) return 'today';
+    if (days === 1) return 'yesterday';
+    if (days < 7) return days+' days ago';
+    var weeks = Math.floor(days/7);
+    if (weeks < 5) return weeks+' week'+(weeks===1?'':'s')+' ago';
+    var months = Math.floor(days/30);
+    return months+' month'+(months===1?'':'s')+' ago';
+  }
+  function updateBackupLabel(){
+    var el = document.getElementById('backupLabel');
+    if (el) el.textContent = '(backup: '+relativeTime(state.meta.lastExportAt)+')';
+  }
+
   function wireVoiceToggle(){
     var v = document.getElementById('voiceToggle');
     if (!v) return;
@@ -1262,11 +1377,13 @@
   document.getElementById('resetBtn').onclick = function(){
     showConfirm('Reset everything?', 'This permanently deletes every goal, countdown, log entry, and logged day. There is no undo.', async function(){
       await deleteAllKeys();
-      state = { activeTab:'today', goals:{longTerm:[],shortTerm:[]}, events:[], summary:[], meta:{lastActiveDate:null, voiceOnClose:true},
-        today: todayStr(), day:{tasks:[],reflection:'',closedOut:false,closedAt:null}, logYears:{}, logYearsAvailable:[], logYearsLoaded:[], editingLogId:null };
+      state = { activeTab:'today', goals:{longTerm:[],shortTerm:[]}, events:[], summary:[], meta:{lastActiveDate:null, voiceOnClose:true, lastExportAt:null},
+        today: todayStr(), day:{tasks:[],reflection:'',closedOut:false,closedAt:null}, logYears:{}, logYearsAvailable:[], logYearsLoaded:[], editingLogId:null,
+        expandedHistoryDate:null, historyDayCache:{}, historyRowLimit:16 };
       await safeSet('meta:app', state.meta);
       render();
       wireVoiceToggle();
+      updateBackupLabel();
       toast('Ledger reset.');
     });
   };
@@ -1283,6 +1400,9 @@
       a.href = url; a.download = 'compound-export-'+state.today+'.json';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      state.meta.lastExportAt = new Date().toISOString();
+      await safeSet('meta:app', state.meta);
+      updateBackupLabel();
     }catch(e){ toast('Export failed'); }
   };
 
@@ -1335,6 +1455,7 @@
     await loadAll();
     render();
     wireVoiceToggle();
+    updateBackupLabel();
   })();
 
 })();
