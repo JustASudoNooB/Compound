@@ -7,7 +7,7 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon-192.png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<meta name="theme-color" content="#16201c">
+<meta name="theme-color" content="#121a16">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -302,6 +302,33 @@
     .wrap{ padding:0 14px 60px; }
     .footbar{ padding:0 14px; }
   }
+
+  /* ---------- deep forest night theme ---------- */
+  html{ background:#121a16; }
+  body{
+    background-color:#121a16;
+    background-image:
+      radial-gradient(1200px 600px at 15% -10%, rgba(169,130,47,.10), transparent 60%),
+      radial-gradient(900px 500px at 110% 30%, rgba(31,92,77,.22), transparent 60%),
+      radial-gradient(rgba(255,255,255,.035) 1px, transparent 1.2px);
+    background-size:auto, auto, 4px 4px;
+    background-attachment:fixed, fixed, scroll;
+    background-position:0 0, 0 0, 0 0;
+    color:var(--ink);
+  }
+  .brand{ color:#f2ebd9; }
+  .brand small{ color:#a9b4ad; }
+  .masthead-inner{ border-bottom-color:#a9822f; }
+  .streak-badge, .level-badge{ color:#a9b4ad; }
+  .streak-badge b, .level-badge b{ color:#f2ebd9; }
+  .level-badge .lvl-track{ background:#1f2a25; border-color:#3a4a41; }
+  .tab{ border-color:#3a4a41; background:#1c2620; color:#a9b4ad; }
+  .tab:hover{ color:#f2ebd9; }
+  .tab.active{ border-color:var(--sheet); background:var(--sheet); color:var(--ink); }
+  main.sheet{ border-color:#2c3a33; box-shadow:0 30px 60px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.03); }
+  .footbar, .footbar button, #status{ color:#8d9a92; }
+  .footbar button:hover{ color:#f2ebd9; }
+  ::selection{ background:#a9822f; color:#fff; }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
 </style>
 </head>
@@ -329,7 +356,7 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v4 · 6 Oct</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v5 · 6 Oct</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
       &nbsp;·&nbsp;
