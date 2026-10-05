@@ -1,4 +1,4 @@
-const CACHE_NAME = 'compound-v3';
+const CACHE_NAME = 'compound-v4';
 const SHELL = [
   './',
   './index.html',
@@ -154,6 +154,18 @@ self.addEventListener('fetch', function (event) {
   var range = event.request.headers.get('range');
   if (range && /\.mp3$/.test(new URL(event.request.url).pathname)) {
     event.respondWith(rangeResponse(event.request, range));
+    return;
+  }
+  // pages: try the network first so a new version shows on the first open; fall back to the cache offline
+  if (event.request.mode === 'navigate' || /\/(index\.html)?$/.test(new URL(event.request.url).pathname)) {
+    event.respondWith(
+      fetch(event.request).then(function (response) {
+        if (response && response.ok) { var copy = response.clone(); caches.open(CACHE_NAME).then(function (c) { c.put('./index.html', copy); }); }
+        return response;
+      }).catch(function () {
+        return caches.match(event.request).then(function (r) { return r || caches.match('./index.html'); });
+      })
+    );
     return;
   }
   event.respondWith(

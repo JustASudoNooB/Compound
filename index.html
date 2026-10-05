@@ -329,7 +329,7 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span id="status"></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v4 · 6 Oct</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
       &nbsp;·&nbsp;
@@ -403,7 +403,9 @@
 
   if ('serviceWorker' in navigator){
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./service-worker.js').catch(function(){});
+      navigator.serviceWorker.register('./service-worker.js').then(function(reg){ if (reg && reg.update) reg.update(); }).catch(function(){});
+      var reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function(){ if (reloaded) return; reloaded = true; window.location.reload(); });
     });
   }
 
