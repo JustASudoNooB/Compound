@@ -1,22 +1,21 @@
-# Compound (offline PWA)
+# Compound
 
-A daily ledger of promises made and kept. Works offline and installs on iPhone and iPad.
+A daily ledger of promises made and kept.
 
-Tabs: Today (tasks + XP), Board (sticky-note promises), Goals (departures board,
-countdowns, steps), Growth (compound balance + levels), Log, History.
+**Open the app: https://justasudonoob.github.io/Compound/**
 
-Voice coach: recorded female and male voices in `voice/f` and `voice/m`,
-cached for offline use. Change it under "voice settings" at the bottom.
+Works offline and installs on iPhone, iPad and desktop. Your data stays on your own device.
 
-## Update on GitHub (from a laptop)
+## What's inside
 
-1. Open github.com/JustASudoNooB/Compound
-2. Add file → Upload files
-3. Drag EVERYTHING inside this folder onto the page, including the `voice`
-   folder (dragging keeps the folder structure; the "choose your files"
-   picker does not).
-4. Commit changes, wait about a minute.
+- **Today**: plan the day, tick tasks off, earn XP, close out the day
+- **Board**: sticky-note promises, peeled off when kept
+- **Goals**: deadlines on a live departures board, with steps and status
+- **Growth**: your compound balance chart and level
+- **Log** and **History**: a permanent record of every day
+- A voice coach (female or male) that works offline
 
-## Getting the update on iPhone / iPad
+## Install on iPhone or iPad
 
-Open Compound from the home screen icon, close it fully, open it again.
+1. Open the link above in Safari
+2. Tap Share, then **Add to Home Screen**
