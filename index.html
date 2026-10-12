@@ -330,6 +330,111 @@
   .footbar button:hover{ color:#f2ebd9; }
   ::selection{ background:#a9822f; color:#fff; }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+  /* ---------- v6: calendar, learn, coach ---------- */
+  [hidden]{ display:none !important; }
+  input[type="number"], input[type="password"]{ border:1px solid var(--rule-strong); border-radius:var(--radius); padding:9px 11px; background:var(--sheet); color:var(--ink); }
+  #choreForm .field-row input, #choreForm .field-row select, .ai-form .field-row input, .ai-form .field-row select, .modal .field-row input, .modal .field-row select{ width:100%; }
+  .btn[disabled]{ opacity:.55; cursor:default; }
+
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin:4px 0 12px; }
+  .cal-title{ font-family:var(--font-display); font-size:18px; font-weight:600; }
+  .cal-nav{ width:40px; height:40px; border:1px solid var(--rule-strong); border-radius:50%; background:var(--sheet); color:var(--ink); font-size:22px; line-height:1; cursor:pointer; }
+  .cal-nav:hover{ border-color:var(--ink); }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:5px; }
+  .cal-wd{ margin-bottom:5px; }
+  .cal-wd span{ text-align:center; font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint); letter-spacing:.06em; }
+  .cal-cell{ aspect-ratio:1 / 1; min-height:42px; border:1px solid var(--rule); border-radius:7px; background:var(--sheet); color:var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:2px; cursor:pointer; font-family:inherit; }
+  .cal-cell.blank{ border:none; background:none; cursor:default; }
+  @media (min-width:601px){ .cal-cell{ aspect-ratio:auto; height:62px; } .cal-num{ font-size:15px; } .cal-sub{ font-size:10.5px; } }
+  .cal-num{ font-size:14px; font-weight:600; line-height:1.1; }
+  .cal-sub{ font-family:var(--font-mono); font-size:9.5px; line-height:1.1; min-height:10px; color:var(--ink-soft); }
+  .cal-cell.g{ background:#cde6d4; border-color:#8cc29d; }
+  .cal-cell.g .cal-sub{ color:#1f5c4d; }
+  .cal-cell.y{ background:#f6e7b0; border-color:#dcc06d; }
+  .cal-cell.y .cal-sub{ color:#7e6018; }
+  .cal-cell.r{ background:#f3d0c8; border-color:#d9998b; }
+  .cal-cell.r .cal-sub{ color:#9c3b2c; }
+  .cal-cell.future{ background:var(--sheet-2); color:var(--ink-faint); }
+  .cal-cell.today{ box-shadow:inset 0 0 0 2px var(--ink); }
+  .cal-cell.sel{ outline:2px solid var(--brass); outline-offset:1px; }
+  .cal-dot{ display:inline-block; width:4px; height:4px; border-radius:50%; background:var(--ink-faint); }
+  .cal-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; font-size:12px; color:var(--ink-soft); margin:12px 0 16px; }
+  .cal-legend i{ display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+  .cal-legend i.g{ background:#cde6d4; border:1px solid #8cc29d; }
+  .cal-legend i.y{ background:#f6e7b0; border:1px solid #dcc06d; }
+  .cal-legend i.r{ background:#f3d0c8; border:1px solid #d9998b; }
+  .cal-detail{ border:1px solid var(--rule-strong); border-radius:var(--radius); background:var(--sheet-2); padding:12px 14px; }
+  .cal-detail-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .cal-pill{ font-family:var(--font-mono); font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:var(--sheet); border:1px solid var(--rule-strong); }
+  .cal-pill.g{ background:#cde6d4; border-color:#8cc29d; color:#1f5c4d; }
+  .cal-pill.y{ background:#f6e7b0; border-color:#dcc06d; color:#7e6018; }
+  .cal-pill.r{ background:#f3d0c8; border-color:#d9998b; color:#9c3b2c; }
+  .day-pill{ font-family:var(--font-mono); font-size:11px; font-weight:700; padding:1px 7px; border-radius:999px; margin-left:4px; }
+  .day-pill.g{ background:#cde6d4; color:#1f5c4d; } .day-pill.y{ background:#f6e7b0; color:#7e6018; } .day-pill.r{ background:#f3d0c8; color:#9c3b2c; }
+  .chore-mark{ width:20px; height:20px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; border:1px dashed var(--rule-strong); border-radius:3px; color:var(--ink-faint); margin-top:1px; }
+  .chore-mark.ok{ background:var(--teal); border:1px solid var(--teal); color:#fff; }
+  .chore-mark.miss{ border:1px solid var(--brick); color:var(--brick); }
+  .wd-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .wd{ width:38px; height:38px; border-radius:50%; border:1px solid var(--rule-strong); background:var(--sheet); color:var(--ink-soft); font-weight:600; font-size:13px; cursor:pointer; }
+  .wd.on{ background:var(--ink); border-color:var(--ink); color:var(--sheet); }
+  .group-head{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin:24px 0 8px; }
+
+  /* coach notes + insights */
+  .coach-notes{ margin:0 0 20px; }
+  .insight{ display:flex; gap:10px; align-items:flex-start; justify-content:space-between; border:1px solid var(--rule-strong); border-left:3px solid var(--teal); border-radius:var(--radius); background:var(--sheet-2); padding:10px 12px; margin-bottom:8px; font-size:13.5px; }
+  .insight.urgent{ border-left-color:var(--brass); }
+  .insight-fb{ display:flex; gap:4px; flex-shrink:0; }
+  .fb{ min-width:34px; height:30px; border:1px solid var(--rule-strong); border-radius:999px; background:var(--sheet); cursor:pointer; font-size:13px; padding:0 8px; color:var(--ink-soft); }
+  .fb:hover{ border-color:var(--ink); color:var(--ink); }
+  .row-tag.risk{ background:var(--brass-light); color:var(--brass-ink); }
+  .prac-strip{ margin:14px 0 4px; }
+
+  /* learn */
+  .prac-card{ border:1px solid var(--rule-strong); border-radius:var(--radius); background:var(--sheet-2); padding:12px 14px; margin-bottom:10px; }
+  .prac-top{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:14px; }
+  .prac-main{ font-size:14.5px; margin-top:8px; }
+  .prac-why{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+  .prac-btns{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .skill-icon{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:8px; background:var(--ink); color:var(--sheet); font-weight:700; font-size:14px; flex-shrink:0; font-family:var(--font-mono); }
+  .skill-icon.sm{ width:24px; height:24px; border-radius:6px; font-size:11px; }
+  .skill-head{ display:flex; align-items:center; gap:12px; width:100%; border:none; background:none; padding:0; text-align:left; cursor:pointer; color:var(--ink); font-family:inherit; }
+  .skill-name{ flex:1; min-width:0; }
+  .skill-name b{ display:block; font-size:15px; }
+  .skill-name small{ display:block; font-size:12px; color:var(--ink-soft); }
+  .skill-pct{ font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--teal); }
+  .ladder{ display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+  .ladder::-webkit-scrollbar{ display:none; }
+  .rung{ flex-shrink:0; border:1px solid var(--rule-strong); background:var(--sheet); border-radius:999px; padding:6px 11px; font-size:12px; cursor:pointer; color:var(--ink-soft); font-family:inherit; }
+  .rung.past{ background:var(--teal-light); color:var(--teal); border-color:#bcd6cb; }
+  .rung.on{ background:var(--ink); color:var(--sheet); border-color:var(--ink); font-weight:600; }
+  .prac{ display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--rule); font-size:13px; }
+  .prac:last-of-type{ border-bottom:none; }
+  .prac-txt{ font-size:13px; color:var(--ink-soft); margin-top:2px; }
+  .prac-score{ font-family:var(--font-mono); font-size:11px; color:var(--teal); white-space:nowrap; }
+  .res-list{ display:flex; flex-direction:column; gap:6px; }
+  .res{ display:block; border:1px solid var(--rule); border-radius:var(--radius); background:var(--sheet); padding:8px 10px; color:var(--ink); text-decoration:none; font-size:13.5px; }
+  .res:hover{ border-color:var(--ink); }
+  .res small{ display:block; font-size:11px; color:var(--ink-soft); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em; }
+  .sched{ display:grid; gap:4px; font-size:13px; }
+  .tips{ margin:4px 0 0; padding-left:18px; font-size:13px; color:var(--ink-soft); }
+  .review{ border:1px solid var(--rule-strong); border-radius:var(--radius); background:var(--sheet-2); padding:10px 12px; margin-bottom:8px; }
+  .grade-row{ display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
+  .grade-row button{ height:34px; border:1px solid var(--rule-strong); border-radius:var(--radius); background:var(--sheet); cursor:pointer; font-size:12.5px; font-weight:600; color:var(--ink); }
+  .grade-row button[data-g="again"]{ color:var(--brick); }
+  .grade-row button[data-g="easy"]{ color:var(--teal); }
+
+  /* ai coach chat */
+  .coach-box{ border:1px solid var(--rule-strong); border-radius:var(--radius); background:var(--sheet-2); padding:12px 14px; }
+  .chat-log{ max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:6px; padding-right:2px; }
+  .msg{ max-width:88%; padding:8px 11px; border-radius:10px; font-size:13.5px; line-height:1.45; word-break:break-word; }
+  .msg.me{ align-self:flex-end; background:var(--ink); color:var(--sheet); border-bottom-right-radius:3px; }
+  .msg.ai{ align-self:flex-start; background:var(--sheet); border:1px solid var(--rule); border-bottom-left-radius:3px; }
+  .msg.err{ color:var(--brick); border-color:var(--brick); }
+  .msg-tasks{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .msg-tasks .chip{ height:auto; min-height:32px; padding:5px 11px; text-align:left; white-space:normal; }
+  .msg-fb{ margin-top:4px; text-align:right; }
+  .msg-fb .fb{ height:24px; font-size:11px; }
 </style>
 </head>
 <body>
@@ -346,8 +451,10 @@
 
 <nav class="tabs" id="tabs">
   <button class="tab active" data-tab="today"><span class="dot"></span>Today</button>
-  <button class="tab" data-tab="board">Board</button>
+  <button class="tab" data-tab="calendar">Calendar</button>
+  <button class="tab" data-tab="learn">Learn</button>
   <button class="tab" data-tab="goals">Goals</button>
+  <button class="tab" data-tab="board">Board</button>
   <button class="tab" data-tab="growth">Growth</button>
   <button class="tab" data-tab="log">Log</button>
   <button class="tab" data-tab="history">History</button>
@@ -356,7 +463,7 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v5 · 6 Oct</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6 · 12 Oct</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
       &nbsp;·&nbsp;
@@ -373,6 +480,7 @@
 <div id="modalRoot"></div>
 <div class="toast" id="toast"></div>
 
+<script src="./library.js"></script>
 <script>
   /* ---------------- on-device storage shim ----------------
      Same get/set/delete/list contract as the Claude-artifact
@@ -527,7 +635,7 @@
     try{
       var days = await window.storage.list('day:', false);
       var logs = await window.storage.list('log:', false);
-      var keys = ['meta:goals','meta:app','stats:daily-summary','meta:events','meta:notes'];
+      var keys = ['meta:goals','meta:app','stats:daily-summary','meta:events','meta:notes','meta:chores','meta:chorelog','meta:skills','meta:practicelog','meta:reviews','meta:brain','meta:aichat'];
       if(days && days.keys) keys = keys.concat(days.keys);
       if(logs && logs.keys) keys = keys.concat(logs.keys);
       for (var i=0;i<keys.length;i++){
@@ -691,7 +799,10 @@
     historyRowLimit: 16,
     boardFilter: 'all',
     noteColor: 'orange',
-    growthRange: 30
+    growthRange: 30,
+    chores: [], choreLog: {}, skills: [], practiceLog: [], reviews: [], brain: defaultBrain(), dayRecs: {}, chat: [],
+    calMonth: null, calSel: null, choreFormOpen: null, learnOpen: null,
+    aiPlanOpen: false, aiBusy: false, aiError: null, aiFixFor: null, chatBusy: false
   };
   function freshState(){
     return { activeTab:'today', goals:{longTerm:[],shortTerm:[]}, events:[], summary:[],
@@ -699,7 +810,10 @@
       today: todayStr(), day:{tasks:[],reflection:'',closedOut:false,closedAt:null}, notes:[],
       logYears:{}, logYearsAvailable:[], logYearsLoaded:[], editingLogId:null,
       expandedHistoryDate:null, historyDayCache:{}, historyRowLimit:16,
-      boardFilter:'all', noteColor:'orange', growthRange:30 };
+      boardFilter:'all', noteColor:'orange', growthRange:30,
+      chores:[], choreLog:{}, skills:[], practiceLog:[], reviews:[], brain: defaultBrain(), dayRecs:{}, chat:[],
+      calMonth:null, calSel:null, choreFormOpen:null, learnOpen:null,
+      aiPlanOpen:false, aiBusy:false, aiError:null, aiFixFor:null, chatBusy:false };
   }
 
   function summaryIndex(date){
@@ -738,6 +852,13 @@
     delete state.meta.voiceOnClose;
     if (state.meta.bonusXp == null) state.meta.bonusXp = 0;
     state.notes = await safeGet('meta:notes', []);
+    state.chores = await safeGet('meta:chores', []);
+    state.choreLog = await safeGet('meta:chorelog', {});
+    state.skills = await safeGet('meta:skills', []);
+    state.practiceLog = await safeGet('meta:practicelog', []);
+    state.reviews = await safeGet('meta:reviews', []);
+    state.brain = Object.assign(defaultBrain(), await safeGet('meta:brain', {}));
+    state.chat = await safeGet('meta:aichat', []);
     state.goals.longTerm = state.goals.longTerm || [];
     state.goals.shortTerm = state.goals.shortTerm || [];
     state.today = todayStr();
@@ -869,6 +990,7 @@
       var dot = t.querySelector('.dot');
       if (on && !dot){ t.insertAdjacentHTML('afterbegin', '<span class="dot"></span>'); }
       if (!on && dot){ dot.parentNode.removeChild(dot); }
+      if (on){ var nav = t.parentNode; if (nav.scrollWidth > nav.clientWidth){ var l = t.offsetLeft - nav.offsetLeft, r = l + t.offsetWidth; if (l < nav.scrollLeft + 8) nav.scrollLeft = Math.max(0, l - 24); else if (r > nav.scrollLeft + nav.clientWidth - 8) nav.scrollLeft = r - nav.clientWidth + 24; } }
     });
     var stats = computeStats();
     streakBadge.innerHTML = '<b>'+stats.showUpStreak+' day'+(stats.showUpStreak===1?'':'s')+'</b>current streak';
@@ -876,6 +998,8 @@
     levelBadge.innerHTML = '<b>Level '+L.level+'</b><div class="lvl-track"><div class="lvl-fill" style="width:'+L.pct+'%"></div></div>'+L.into+' / '+L.need+' xp';
     if (depTimer){ clearInterval(depTimer); depTimer = null; }
     if (state.activeTab === 'today') root.innerHTML = renderToday();
+    else if (state.activeTab === 'calendar') root.innerHTML = renderCalendar();
+    else if (state.activeTab === 'learn') root.innerHTML = renderLearn();
     else if (state.activeTab === 'board') root.innerHTML = renderBoard();
     else if (state.activeTab === 'goals') root.innerHTML = renderGoals();
     else if (state.activeTab === 'growth') root.innerHTML = renderGrowth(stats);
@@ -907,8 +1031,14 @@
     var completed = tasks.filter(function(t){return t.completed;}).length;
     var rate = planned ? Math.round((completed/planned)*100) : 0;
 
+    var riskCount = 0;
     var rowsHtml = tasks.map(function(t, i){
       var g = t.goalRef ? findGoal(t.goalRef) : null;
+      var sk = t.skillRef ? state.skills.find(function(x){ return x.id === t.skillRef.skillId; }) : null;
+      var skillTag = sk ? '<span class="row-tag" style="background:var(--ink);color:var(--sheet);">'+escapeHtml(sk.icon || '•')+' '+escapeHtml(sk.name)+' · '+escapeHtml(t.skillRef.type)+'</span>' : '';
+      var rk = state.day.closedOut ? null : slipRisk(t, i, tasks.length);
+      if (rk) riskCount++;
+      var riskTag = rk ? '<span class="row-tag risk" title="Model estimate: '+Math.round(rk.p*100)+'% chance you finish this">likely to slip · '+escapeHtml(rk.why)+'</span>' : '';
       var weightTag = (t.weight && t.weight!==2) ? '<span class="row-tag" style="background:var(--sheet-2);color:var(--ink-soft);">'+(t.weight===1?'quick':'big promise')+'</span>' : '';
       return '' +
       '<div class="row'+(t.completed?' done':'')+'" data-task="'+t.id+'">' +
@@ -918,7 +1048,7 @@
         '</button>' +
         '<div class="row-body">' +
           '<div class="row-text">'+escapeHtml(t.text)+'</div>' +
-          (g ? '<span class="row-tag">'+ (t.goalRef.type==='long'?'◆ ':'· ') + escapeHtml(g.title)+'</span>' : '') + weightTag +
+          (g ? '<span class="row-tag">'+ (t.goalRef.type==='long'?'◆ ':'· ') + escapeHtml(g.title)+'</span>' : '') + skillTag + weightTag + riskTag +
         '</div>' +
         '<span class="xp-chip">+'+taskXp(t)+' xp</span>' +
         (state.day.closedOut ? '' : '<button class="row-del" data-action="delete" data-id="'+t.id+'" aria-label="Delete entry">×</button>') +
@@ -965,10 +1095,13 @@
       '</div>';
     var xpToday = tasks.filter(function(t){return t.completed;}).reduce(function(s,t){return s+taskXp(t);},0);
     var xpPossible = tasks.reduce(function(s,t){return s+taskXp(t);},0);
+    var ds = dayScore(state.today, summaryMap(computeStats()));
+    var dayPill = ds.pct != null ? ' · day score <span class="day-pill '+scoreClass(ds.pct)+'">'+Math.round(ds.pct*100)+'%</span>' : '';
 
     return '' +
       '<h2 class="section-title">'+prettyDate(state.today)+'</h2>' +
-      '<p class="section-sub">Entry '+ (state.day.closedOut? 'closed' : 'open') +' · '+planned+' planned</p>' +
+      '<p class="section-sub">Entry '+ (state.day.closedOut? 'closed' : 'open') +' · '+planned+' planned'+dayPill+'</p>' +
+      todayCoachHtml(riskCount) +
       '<div class="balance">' +
         '<div class="count">'+completed+'<span> / '+planned+' kept</span></div>' +
         '<div class="balance-track"><div class="balance-fill" style="width:'+rate+'%"></div></div>' +
@@ -977,6 +1110,8 @@
       '</div>' +
       listBlock +
       addRow +
+      todayPracticeHtml() +
+      todayChoresHtml() +
       closeBlock;
   }
 
@@ -1481,6 +1616,1004 @@
       '<div class="chart-card" style="margin-top:0;">'+barSvg+'</div>' +
       '<p class="section-sub" style="margin:8px 0 0;">Task xp: quick 10, standard 20, big 40. A goal step is worth '+STEP_XP+' and a board promise kept is worth '+NOTE_XP+'.</p>';
   }
+
+  /* ================================================================
+     CALENDAR + RECURRING CHORES
+     ================================================================ */
+  var CHORE_XP = 10;
+  var WD_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function lastDayOfMonth(ds){ var d = new Date(ds.slice(0,8)+'01T00:00:00'); d.setMonth(d.getMonth()+1); d.setDate(0); return toDateStr(d); }
+  function weekStartOf(ds){ var d = new Date(ds+'T00:00:00'); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return toDateStr(d); }
+  function dayDiff(a, b){ return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000); }
+  function addMonths(ds, n){ var d = new Date(ds+'T00:00:00'); var day = d.getDate(); d.setDate(1); d.setMonth(d.getMonth()+n); var last = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate(); d.setDate(Math.min(day, last)); return toDateStr(d); }
+  function choreActive(c, ds){ return ds >= c.start && (!c.end || ds <= c.end) && !(c.archivedAt && ds >= c.archivedAt); }
+  function choreDone(c, ds){ var l = state.choreLog[ds]; return !!(l && l[c.id]); }
+  function chorePeriod(c, ds){
+    var s, e;
+    if (c.freq === 'weekly'){ s = weekStartOf(ds); e = addDays(s, 6); }
+    else { s = ds.slice(0,8)+'01'; e = lastDayOfMonth(ds); }
+    var as = s < c.start ? c.start : s;
+    var ae = e;
+    if (c.end && c.end < ae) ae = c.end;
+    if (c.archivedAt && addDays(c.archivedAt, -1) < ae) ae = addDays(c.archivedAt, -1);
+    return { start:s, end:e, activeStart:as, activeEnd:ae };
+  }
+  function choreQuota(c, p){
+    var full = dayDiff(p.start, p.end) + 1, act = dayDiff(p.activeStart, p.activeEnd) + 1;
+    if (act <= 0) return 0;
+    var n = Math.max(1, c.times || 1);
+    return act >= full ? n : Math.max(1, Math.round(n * act / full));
+  }
+  function choreDoneInRange(c, from, to){
+    var n = 0;
+    Object.keys(state.choreLog).forEach(function(d){ if (d >= from && d <= to && state.choreLog[d][c.id]) n++; });
+    return n;
+  }
+  // What one chore contributes to one day: how many are due, how many done, and whether to list it
+  function choreOnDay(c, ds){
+    var today = state.today;
+    if (c.freq === 'daily' || c.freq === 'days'){
+      if (!choreActive(c, ds)) return null;
+      if (c.freq === 'days' && (c.days || []).indexOf(new Date(ds+'T00:00:00').getDay()) === -1) return null;
+      var d1 = choreDone(c, ds);
+      return { chore:c, due:1, done:d1 ? 1 : 0, ticked:d1, show:true, label:'', missed:0 };
+    }
+    var p = chorePeriod(c, ds);
+    if (p.activeEnd < p.activeStart || ds < p.activeStart || ds > p.activeEnd) return null;
+    var quota = choreQuota(c, p);
+    var doneIn = choreDoneInRange(c, p.activeStart, p.activeEnd);
+    var dn = choreDone(c, ds);
+    var due = dn ? 1 : 0, done = dn ? 1 : 0, missed = 0;
+    if (ds === p.activeEnd && ds < today){ missed = Math.max(0, quota - doneIn); due += missed; }
+    var doneBefore = choreDoneInRange(c, p.activeStart, addDays(ds, -1));
+    return { chore:c, due:due, done:done, ticked:dn, show: dn || doneBefore < quota || missed > 0, missed:missed,
+      label: Math.min(doneIn, quota)+'/'+quota+' this '+(c.freq === 'weekly' ? 'week' : 'month') };
+  }
+  function dayChores(ds){
+    var out = [];
+    (state.chores || []).forEach(function(c){ var r = choreOnDay(c, ds); if (r && (r.show || r.due)) out.push(r); });
+    return out;
+  }
+  function summaryMap(stats){ var m = {}; stats.summary.forEach(function(e){ m[e.date] = e; }); return m; }
+  function dayScore(ds, smap){
+    var ch = dayChores(ds), due = 0, done = 0;
+    ch.forEach(function(r){ due += r.due; done += r.done; });
+    var e = smap[ds];
+    if (e){ due += e.planned || 0; done += e.completed || 0; }
+    return { due:due, done:done, pct: due ? done/due : null, chores:ch, tasks:e || null };
+  }
+  function scoreClass(pct){ return pct == null ? '' : pct >= 0.85 ? 'g' : pct >= 0.5 ? 'y' : 'r'; }
+  function choreEditable(ds){ return ds === state.today || ds === addDays(state.today, -1); }
+  function choreFreqText(c){
+    var f;
+    if (c.freq === 'daily') f = 'Every day';
+    else if (c.freq === 'days') f = (c.days || []).slice().sort().map(function(d){ return WD_LABELS[d]; }).join(', ');
+    else f = (c.times || 1)+'× a '+(c.freq === 'weekly' ? 'week' : 'month');
+    var until = c.end ? ' · until '+prettyDate(c.end) : ' · ongoing';
+    if (c.archivedAt) until = ' · stopped '+prettyDate(c.archivedAt);
+    return f + until;
+  }
+  function choreStreak(c){
+    if (c.freq !== 'daily' && c.freq !== 'days') return 0;
+    var n = 0, d = choreDone(c, state.today) ? state.today : addDays(state.today, -1);
+    for (var i=0;i<400;i++){
+      var r = choreOnDay(c, d);
+      if (!r){ if (d < c.start) break; d = addDays(d, -1); continue; }
+      if (!r.ticked) break;
+      n++; d = addDays(d, -1);
+    }
+    return n;
+  }
+  function toggleChore(id, ds, el){
+    if (!choreEditable(ds)){ toast('Only today and yesterday can be changed'); return; }
+    var c = (state.chores || []).find(function(x){ return x.id === id; });
+    if (!c) return;
+    if (!state.choreLog[ds]) state.choreLog[ds] = {};
+    var now = !state.choreLog[ds][id];
+    if (now) state.choreLog[ds][id] = true; else delete state.choreLog[ds][id];
+    if (!Object.keys(state.choreLog[ds]).length) delete state.choreLog[ds];
+    addBonusXp(now ? CHORE_XP : -CHORE_XP);
+    safeSet('meta:chorelog', state.choreLog);
+    if (now){
+      xpPop(el, '+'+CHORE_XP+' xp');
+      var leveled = rememberLevel();
+      if (leveled) setTimeout(function(){ celebrateLevel(el); }, 350); else chime('up');
+      if (voiceSettings().ticks) say('tick');
+    } else chime('down');
+    render();
+  }
+
+  function choreFormHtml(c){
+    c = c || {};
+    var freq = c.freq || 'daily';
+    var days = c.days || [1,2,3,4,5];
+    var opt = function(v, l, cur){ return '<option value="'+v+'"'+(cur === v ? ' selected' : '')+'>'+l+'</option>'; };
+    var wdBtns = [1,2,3,4,5,6,0].map(function(d){
+      var on = days.indexOf(d) >= 0;
+      return '<button type="button" class="wd'+(on ? ' on' : '')+'" data-act="chore-wd" data-d="'+d+'" aria-pressed="'+on+'">'+WD_LABELS[d].charAt(0)+'</button>';
+    }).join('');
+    return '<div class="inline-form" id="choreForm" data-editing="'+(c.id || '')+'">' +
+      '<div class="field-row"><div><span class="field-label">Chore</span><input type="text" id="chTitle" maxlength="80" placeholder="e.g. Clean the room, 20 min Japanese, Gym" value="'+escapeHtml(c.title || '')+'"></div></div>' +
+      '<div class="field-row">' +
+        '<div><span class="field-label">How often</span><select id="chFreq" data-act-change="chore-freq">' +
+          opt('daily','Every day',freq) + opt('days','On chosen days',freq) + opt('weekly','N times a week',freq) + opt('monthly','N times a month',freq) +
+        '</select></div>' +
+        '<div class="ch-times" '+(freq === 'weekly' || freq === 'monthly' ? '' : 'hidden')+'><span class="field-label">Times</span><input type="number" id="chTimes" min="1" max="31" value="'+(c.times || 3)+'"></div>' +
+      '</div>' +
+      '<div class="ch-days field-row" '+(freq === 'days' ? '' : 'hidden')+'><div><span class="field-label">Days</span><div class="wd-row">'+wdBtns+'</div></div></div>' +
+      '<div class="field-row">' +
+        '<div><span class="field-label">Starts</span><input type="date" id="chStart" value="'+(c.start || state.today)+'"></div>' +
+        '<div><span class="field-label">For</span><select id="chDur" data-act-change="chore-dur">' +
+          opt('day','1 day',c.id ? 'custom' : 'month') + opt('week','1 week','') + opt('month','1 month',c.id ? '' : 'month') + opt('3m','3 months','') + opt('6m','6 months','') +
+          opt('forever','Until I stop it', c.id && !c.end ? 'forever' : '') + opt('custom','Until a date', c.id && c.end ? 'custom' : '') +
+        '</select></div>' +
+      '</div>' +
+      '<div class="field-row ch-end" '+(c.id && c.end ? '' : 'hidden')+'><div><span class="field-label">Ends</span><input type="date" id="chEnd" value="'+(c.end || '')+'"></div></div>' +
+      '<div style="display:flex;gap:8px;"><button class="btn small" data-act="chore-save">'+(c.id ? 'Save chore' : 'Add chore')+'</button>' +
+      '<button class="btn ghost small" data-act="chore-cancel">Cancel</button></div>' +
+    '</div>';
+  }
+  function saveChoreForm(){
+    var f = document.getElementById('choreForm');
+    var title = (document.getElementById('chTitle').value || '').trim();
+    if (!title){ toast('Name the chore first'); return; }
+    var freq = document.getElementById('chFreq').value;
+    var start = document.getElementById('chStart').value || state.today;
+    var dur = document.getElementById('chDur').value;
+    var end = null;
+    if (dur === 'day') end = start;
+    else if (dur === 'week') end = addDays(start, 6);
+    else if (dur === 'month') end = addDays(addMonths(start, 1), -1);
+    else if (dur === '3m') end = addDays(addMonths(start, 3), -1);
+    else if (dur === '6m') end = addDays(addMonths(start, 6), -1);
+    else if (dur === 'custom') end = document.getElementById('chEnd').value || null;
+    if (end && end < start){ toast('The end date is before the start'); return; }
+    var days = [];
+    f.querySelectorAll('.wd.on').forEach(function(b){ days.push(parseInt(b.dataset.d, 10)); });
+    if (freq === 'days' && !days.length){ toast('Pick at least one day'); return; }
+    var times = Math.max(1, Math.min(31, parseInt(document.getElementById('chTimes').value, 10) || 1));
+    var editing = f.dataset.editing;
+    if (editing){
+      var c = state.chores.find(function(x){ return x.id === editing; });
+      Object.assign(c, { title:title.slice(0,80), freq:freq, days:days, times:times, start:start, end:end });
+    } else {
+      state.chores.push({ id: uid(), title:title.slice(0,80), freq:freq, days:days, times:times, start:start, end:end, createdAt: new Date().toISOString(), archivedAt:null });
+    }
+    state.choreFormOpen = null;
+    safeSet('meta:chores', state.chores);
+    render();
+    toast(editing ? 'Chore updated' : 'Chore added');
+  }
+
+  function choreRowsHtml(items, ds){
+    var editable = choreEditable(ds) && ds <= state.today;
+    return items.map(function(r){
+      var c = r.chore;
+      var mark = editable ?
+        '<button class="tick'+(r.ticked ? ' done' : '')+'" data-act="chore-tick" data-id="'+c.id+'" data-d="'+ds+'" aria-label="'+(r.ticked ? 'Mark not done: ' : 'Mark done: ')+escapeHtml(c.title)+'">'+
+          '<svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' :
+        '<span class="chore-mark '+(r.ticked ? 'ok' : (ds < state.today ? 'miss' : ''))+'">'+(r.ticked ? '&#10003;' : (ds < state.today ? '&#10005;' : '&#9675;'))+'</span>';
+      return '<div class="row chore-row'+(r.ticked ? ' done' : '')+'">' + mark +
+        '<div class="row-body"><div class="row-text">'+escapeHtml(c.title)+'</div>' +
+          (r.label ? '<span class="row-tag" style="background:var(--sheet-2);color:var(--ink-soft);">'+r.label+'</span>' : '') +
+          (r.missed ? '<span class="row-tag" style="background:var(--brick-light);color:var(--brick);">missed '+r.missed+'</span>' : '') +
+        '</div>' +
+        (editable ? '<span class="xp-chip">+'+CHORE_XP+' xp</span>' : '') +
+      '</div>';
+    }).join('');
+  }
+
+  function renderCalendar(){
+    var stats = computeStats();
+    var smap = summaryMap(stats);
+    var ym = state.calMonth || state.today.slice(0,7);
+    var first = ym+'-01', last = lastDayOfMonth(first);
+    var lead = (new Date(first+'T00:00:00').getDay()+6)%7;
+    var monthName = new Date(first+'T00:00:00').toLocaleDateString(undefined, { month:'long', year:'numeric' });
+    var cells = '';
+    for (var i=0;i<lead;i++) cells += '<span class="cal-cell blank"></span>';
+    var g = 0, y = 0, r = 0, sum = 0, cnt = 0;
+    var dcount = dayDiff(first, last) + 1;
+    for (var k=0;k<dcount;k++){
+      var ds = addDays(first, k);
+      var sc = dayScore(ds, smap);
+      var future = ds > state.today;
+      var cls = future ? '' : scoreClass(sc.pct);
+      if (ds < state.today && sc.pct != null){ cnt++; sum += sc.pct; if (cls === 'g') g++; else if (cls === 'y') y++; else r++; }
+      var sub = future ? (sc.chores.length ? '<span class="cal-dot"></span>' : '') : (sc.pct != null ? Math.round(sc.pct*100)+'%' : '');
+      cells += '<button class="cal-cell '+cls+(ds === state.today ? ' today' : '')+(ds === state.calSel ? ' sel' : '')+(future ? ' future' : '')+'" data-act="cal-day" data-d="'+ds+'" aria-label="'+prettyDate(ds)+(sc.pct != null && !future ? ', '+Math.round(sc.pct*100)+' percent' : '')+'">' +
+        '<span class="cal-num">'+(k+1)+'</span><span class="cal-sub">'+sub+'</span></button>';
+    }
+    var sel = state.calSel || state.today;
+    var ss = dayScore(sel, smap);
+    var selCls = sel > state.today ? '' : scoreClass(ss.pct);
+    var choresHtml = ss.chores.length ? choreRowsHtml(ss.chores, sel) : '<p class="section-sub" style="margin:6px 0;">No chores on this day.</p>';
+    var t = ss.tasks;
+    var tasksLine = t && t.planned ? 'Tasks: '+t.completed+' of '+t.planned+' kept' : 'No tasks logged';
+    var detail = '<div class="cal-detail">' +
+      '<div class="cal-detail-head"><div><b>'+prettyDate(sel)+'</b>'+(sel === state.today ? ' <span class="row-tag" style="margin:0 0 0 4px;">today</span>' : '')+'</div>' +
+        (ss.pct != null && sel <= state.today ? '<span class="cal-pill '+selCls+'">'+Math.round(ss.pct*100)+'% · '+ss.done+'/'+ss.due+'</span>' : '') + '</div>' +
+      choresHtml +
+      '<p class="section-sub" style="margin:10px 0 0;">'+tasksLine+(sel === state.today ? ' · <button class="link-btn" data-act="goto" data-tab="today">open Today</button>' : '')+'</p>' +
+      (sel < addDays(state.today, -1) ? '<p class="section-sub" style="margin:4px 0 0;">Days older than yesterday are locked.</p>' : '') +
+    '</div>';
+
+    var active = (state.chores || []).filter(function(c){ return !c.archivedAt && (!c.end || c.end >= state.today); });
+    var past = (state.chores || []).filter(function(c){ return active.indexOf(c) < 0; });
+    function choreCard(c){
+      var prog = '';
+      if (c.freq === 'weekly' || c.freq === 'monthly'){
+        var p = chorePeriod(c, state.today);
+        if (state.today >= p.activeStart && state.today <= p.activeEnd) prog = choreDoneInRange(c, p.activeStart, p.activeEnd)+'/'+choreQuota(c, p)+' this '+(c.freq === 'weekly' ? 'week' : 'month');
+      } else {
+        var s = choreStreak(c); prog = s ? s+' day streak' : '';
+      }
+      var logged = Object.keys(state.choreLog).some(function(d){ return state.choreLog[d][c.id]; });
+      return '<div class="goal-card"><div class="goal-top"><div><div class="goal-title">'+escapeHtml(c.title)+'</div><div class="goal-meta">'+choreFreqText(c)+'</div></div>' +
+        (prog ? '<span class="status" style="color:var(--teal);">'+prog+'</span>' : '') + '</div>' +
+        '<div class="goal-actions"><button class="link-btn" data-act="chore-edit" data-id="'+c.id+'">edit</button>' +
+        (c.archivedAt ? '' : '<button class="link-btn" data-act="chore-stop" data-id="'+c.id+'">stop</button>') +
+        (logged ? '' : '<button class="link-btn" data-act="chore-del" data-id="'+c.id+'">delete</button>') + '</div></div>';
+    }
+    var formHtml = state.choreFormOpen ? choreFormHtml(state.choreFormOpen === 'new' ? null : state.chores.find(function(c){ return c.id === state.choreFormOpen; })) : '';
+
+    return '' +
+      '<h2 class="section-title">Calendar</h2>' +
+      '<p class="section-sub">Each day is scored on its recurring chores plus that day&#39;s tasks. Green is 85% or more, yellow 50 to 85%, red under 50%.</p>' +
+      '<div class="cal-head"><button class="cal-nav" data-act="cal-prev" aria-label="Previous month">&#8249;</button><div class="cal-title">'+monthName+'</div>' +
+        '<button class="cal-nav" data-act="cal-next" aria-label="Next month">&#8250;</button></div>' +
+      '<div class="cal-grid cal-wd">'+['M','T','W','T','F','S','S'].map(function(d){ return '<span>'+d+'</span>'; }).join('')+'</div>' +
+      '<div class="cal-grid">'+cells+'</div>' +
+      '<div class="cal-legend"><span><i class="g"></i>85%+ · '+g+'</span><span><i class="y"></i>50–85% · '+y+'</span><span><i class="r"></i>under 50% · '+r+'</span>' +
+        (cnt ? '<span style="margin-left:auto;font-family:var(--font-mono);">avg '+Math.round(sum/cnt*100)+'% · past days</span>' : '') + '</div>' +
+      detail +
+      '<div class="goal-group" style="margin-top:22px;">' +
+        '<div class="goal-group-head"><h3 class="group-label">Recurring chores</h3>' +
+        (state.choreFormOpen ? '' : '<button class="link-btn" data-act="chore-new">+ new chore</button>') + '</div>' +
+        formHtml +
+        (active.length ? active.map(choreCard).join('') : '<div class="empty" style="padding:20px;">No chores yet. Add the things you want to do every day, on certain days, or a few times a week.</div>') +
+        (past.length ? '<details style="margin-top:6px;"><summary class="section-sub" style="cursor:pointer;">Finished or stopped ('+past.length+')</summary>'+past.map(choreCard).join('')+'</details>' : '') +
+      '</div>';
+  }
+
+  /* ================================================================
+     ON-DEVICE LEARNING ("the coach brain")
+     Three small models, all trained on this device:
+       1. A Thompson-sampling bandit per skill practice type: learns which
+          practices you actually do and find useful. Decays old evidence so
+          it adapts within days, and "wrong for me" counts as strong evidence.
+       2. Spaced repetition for anything new you learn (expanding intervals,
+          shortened when you forget).
+       3. An online logistic regression over past tasks that predicts which
+          of today's tasks are likely to slip, plus simple capacity and
+          weekday statistics. Every insight can be marked wrong and is muted.
+     ================================================================ */
+  function defaultBrain(){ return { bandit:{}, mutes:{}, picks:{ date:null, bySkill:{} }, insightFb:{}, seenDays:{}, lr:null, lrN:0, lrAt:null }; }
+  function saveBrain(){ return safeSet('meta:brain', state.brain); }
+  function gammaSample(k){
+    if (k < 1){ return gammaSample(k + 1) * Math.pow(Math.random(), 1/k); }
+    var d = k - 1/3, c = 1/Math.sqrt(9*d);
+    for (;;){
+      var x, v;
+      do { var u1 = Math.random(), u2 = Math.random(); x = Math.sqrt(-2*Math.log(u1 || 1e-12)) * Math.cos(2*Math.PI*u2); v = 1 + c*x; } while (v <= 0);
+      v = v*v*v; var u = Math.random();
+      if (u < 1 - 0.0331*x*x*x*x) return d*v;
+      if (Math.log(u) < 0.5*x*x + d*(1 - v + Math.log(v))) return d*v;
+    }
+  }
+  function betaSample(a, b){ var x = gammaSample(a), y = gammaSample(b); return x/(x+y); }
+  function banditKey(skillId, type){ return skillId+':'+type; }
+  function banditArm(key){ return state.brain.bandit[key] || { a:1, b:1 }; }
+  function banditUpdate(key, reward){
+    var p = banditArm(key);
+    p = { a: 1 + (p.a - 1)*0.93, b: 1 + (p.b - 1)*0.93 };
+    if (reward > 0) p.a += reward; else p.b += -reward;
+    state.brain.bandit[key] = p;
+  }
+  function armText(key){
+    var p = banditArm(key), n = Math.round(p.a + p.b - 2);
+    if (n < 2) return 'New for you, so the coach is testing it.';
+    return 'You follow through on this kind of practice about '+Math.round(p.a/(p.a+p.b)*100)+'% of the time.';
+  }
+  function skillLevel(s){ return s.levels[Math.min(s.level, s.levels.length-1)]; }
+  function isMuted(key){ var m = state.brain.mutes[key]; return m && m >= state.today; }
+  function pickPractice(s, exclude){
+    var lv = skillLevel(s);
+    var cands = lv.practices.filter(function(p){ return p.type !== exclude && !isMuted(banditKey(s.id, p.type)); });
+    if (!cands.length) cands = lv.practices.filter(function(p){ return p.type !== exclude; });
+    if (!cands.length) cands = lv.practices;
+    var best = null, bestV = -1;
+    cands.forEach(function(p){ var a = banditArm(banditKey(s.id, p.type)); var v = betaSample(a.a, a.b); if (v > bestV){ bestV = v; best = p; } });
+    return best;
+  }
+  function todayPick(s){
+    var b = state.brain;
+    if (b.picks.date !== state.today){ b.picks = { date: state.today, bySkill:{} }; }
+    var lv = skillLevel(s);
+    var cur = b.picks.bySkill[s.id];
+    var p = cur && lv.practices.find(function(x){ return x.type === cur.type; });
+    if (!p){ p = pickPractice(s); b.picks.bySkill[s.id] = { type: p.type, status: 'open' }; saveBrain(); }
+    return { practice: p, status: b.picks.bySkill[s.id].status };
+  }
+  function logPractice(s, p, outcome, taskId){
+    state.practiceLog.push({ id: uid(), date: state.today, skillId: s.id, type: p.type, kind: p.kind, minutes: p.minutes, outcome: outcome, taskId: taskId || null });
+    if (state.practiceLog.length > 3000) state.practiceLog = state.practiceLog.slice(-3000);
+    if (outcome === 'done' && p.kind === 'new'){
+      state.reviews.push({ id: uid(), skillId: s.id, text: p.text, learnedOn: state.today, due: addDays(state.today, 1), interval: 1, ease: 2.4, reps: 0 });
+    }
+    safeSet('meta:practicelog', state.practiceLog);
+    safeSet('meta:reviews', state.reviews);
+  }
+  function practiceAction(skillId, action, el){
+    var s = state.skills.find(function(x){ return x.id === skillId; });
+    if (!s) return;
+    var pk = todayPick(s), p = pk.practice, key = banditKey(s.id, p.type);
+    if (action === 'add'){
+      if (state.day.closedOut){ toast('Today is closed. Reopen it to add tasks.'); return; }
+      state.day.tasks.push({ id: uid(), text: p.text, completed: false, goalRef: null, weight: p.minutes >= 45 ? 3 : p.minutes <= 15 ? 1 : 2,
+        skillRef: { skillId: s.id, type: p.type, kind: p.kind, minutes: p.minutes } });
+      state.brain.picks.bySkill[s.id].status = 'added';
+      saveDay(); syncTodaySummary(); saveSummary(); saveBrain();
+      toast('Added to Today');
+    } else if (action === 'done'){
+      banditUpdate(key, 1); logPractice(s, p, 'done');
+      state.brain.picks.bySkill[s.id].status = 'done';
+      addBonusXp(p.minutes >= 45 ? 40 : p.minutes <= 15 ? 10 : 20);
+      xpPop(el, 'nice'); chime('up');
+      if (rememberLevel()) setTimeout(function(){ celebrateLevel(el); }, 350);
+      saveBrain();
+    } else if (action === 'skip'){
+      banditUpdate(key, -0.5); logPractice(s, p, 'skipped');
+      state.brain.picks.bySkill[s.id] = { type: pickPractice(s, p.type).type, status: 'open' };
+      saveBrain();
+    } else if (action === 'wrong'){
+      banditUpdate(key, -2); logPractice(s, p, 'wrong');
+      state.brain.mutes[key] = addDays(state.today, 7);
+      state.brain.picks.bySkill[s.id] = { type: pickPractice(s, p.type).type, status: 'open' };
+      saveBrain();
+      toast('Got it. The coach won’t suggest that for a week and has learned from it.');
+    }
+    render();
+  }
+  // a skill task finished (or un-finished) on the Today tab
+  function onSkillTaskToggled(t){
+    var s = state.skills.find(function(x){ return x.id === t.skillRef.skillId; });
+    if (!s) return;
+    var key = banditKey(s.id, t.skillRef.type);
+    var p = { type: t.skillRef.type, kind: t.skillRef.kind, minutes: t.skillRef.minutes, text: t.text };
+    if (t.completed){
+      banditUpdate(key, 1); logPractice(s, p, 'done', t.id);
+      if (state.brain.picks.date === state.today && state.brain.picks.bySkill[s.id] && state.brain.picks.bySkill[s.id].type === p.type) state.brain.picks.bySkill[s.id].status = 'done';
+    } else {
+      var p0 = banditArm(key); state.brain.bandit[key] = { a: Math.max(1, p0.a - 1), b: p0.b };
+      var pk0 = state.brain.picks.date === state.today && state.brain.picks.bySkill[s.id];
+      if (pk0 && pk0.type === p.type && pk0.status === 'done') pk0.status = 'added';
+      state.practiceLog = state.practiceLog.filter(function(l){ return l.taskId !== t.id; });
+      state.reviews = state.reviews.filter(function(r){ return !(r.learnedOn === state.today && r.skillId === s.id && r.text === t.text && r.reps === 0); });
+      safeSet('meta:practicelog', state.practiceLog); safeSet('meta:reviews', state.reviews);
+    }
+    saveBrain();
+  }
+  function rateReview(id, grade){
+    var r = state.reviews.find(function(x){ return x.id === id; });
+    if (!r) return;
+    var iv = r.interval, ease = r.ease;
+    if (grade === 'again'){ iv = 1; ease = Math.max(1.3, ease - 0.2); }
+    else if (grade === 'hard'){ iv = Math.max(1, iv * 1.2); ease = Math.max(1.3, ease - 0.15); }
+    else if (grade === 'good'){ iv = r.reps === 0 ? 3 : iv * ease; }
+    else { iv = (r.reps === 0 ? 4 : iv * ease) * 1.3; ease = ease + 0.15; }
+    r.interval = Math.min(365, iv); r.ease = ease; r.reps++; r.last = state.today;
+    r.due = addDays(state.today, Math.max(1, Math.round(r.interval)));
+    safeSet('meta:reviews', state.reviews);
+    addBonusXp(5);
+    chime(grade === 'again' ? 'down' : 'up');
+    render();
+  }
+
+  // ---- completion model (online logistic regression) ----
+  var LR_NAMES = ['base','quick task','big task','weekend','busy day','linked to a goal','skill practice','late in the list'];
+  function taskFeatures(t, ds, idx, n){
+    var wd = new Date(ds+'T00:00:00').getDay();
+    return [1, t.weight === 1 ? 1 : 0, t.weight === 3 ? 1 : 0, (wd === 0 || wd === 6) ? 1 : 0, Math.min(n, 12)/8, t.goalRef ? 1 : 0, t.skillRef ? 1 : 0, n > 1 ? idx/(n-1) : 0];
+  }
+  function sigmoid(z){ return 1/(1+Math.exp(-z)); }
+  async function loadDayRecs(){
+    state.dayRecs = {};
+    try{
+      var res = await window.storage.list('day:', false);
+      var keys = (res && res.keys) || [];
+      for (var i=0;i<keys.length;i++){
+        var ds = keys[i].slice(4);
+        if (ds >= state.today) continue;
+        var rec = await safeGet(keys[i], null);
+        if (rec && rec.tasks) state.dayRecs[ds] = rec;
+      }
+    }catch(e){}
+  }
+  function trainBrain(){
+    var b = state.brain, changed = false;
+    // tasks for skills that were left undone count as a miss for that practice type
+    Object.keys(state.dayRecs).forEach(function(ds){
+      if (b.seenDays[ds]) return;
+      (state.dayRecs[ds].tasks || []).forEach(function(t){ if (t.skillRef && !t.completed) banditUpdate(banditKey(t.skillRef.skillId, t.skillRef.type), -1); });
+      b.seenDays[ds] = 1; changed = true;
+    });
+    var X = [], Y = [];
+    Object.keys(state.dayRecs).forEach(function(ds){
+      var ts = state.dayRecs[ds].tasks || [];
+      ts.forEach(function(t, i){ X.push(taskFeatures(t, ds, i, ts.length)); Y.push(t.completed ? 1 : 0); });
+    });
+    if (X.length >= 12){
+      var w = [0,0,0,0,0,0,0,0];
+      var mean = Y.reduce(function(s, v){ return s+v; }, 0)/Y.length;
+      w[0] = Math.log((mean+0.02)/(1-mean+0.02));
+      for (var ep=0; ep<60; ep++){
+        for (var i=0;i<X.length;i++){
+          var x = X[i], z = 0;
+          for (var j=0;j<8;j++) z += w[j]*x[j];
+          var g = sigmoid(z) - Y[i];
+          for (var j2=0;j2<8;j2++) w[j2] -= 0.08*(g*x[j2] + (j2 ? 0.02*w[j2] : 0));
+        }
+      }
+      b.lr = w; b.lrN = X.length; b.lrAt = state.today; changed = true;
+    }
+    if (changed) saveBrain();
+  }
+  function slipRisk(t, idx, n){
+    var w = state.brain.lr;
+    if (!w || state.brain.lrN < 20 || t.completed) return null;
+    var x = taskFeatures(t, state.today, idx, n), z = 0, worst = -1, worstV = 0;
+    for (var j=0;j<8;j++){ z += w[j]*x[j]; if (j && w[j]*x[j] < worstV){ worstV = w[j]*x[j]; worst = j; } }
+    var p = sigmoid(z);
+    if (p >= 0.4) return null;
+    if (isInsightMuted('slip')) return null;
+    return { p: p, why: worst > 0 ? LR_NAMES[worst] : 'your recent pattern' };
+  }
+  function isInsightMuted(key){ var f = state.brain.insightFb[key]; return f && f.mutedUntil && f.mutedUntil >= state.today; }
+  function brainInsights(stats){
+    var out = [];
+    var days = stats.summary.filter(function(e){ return e.date < state.today && e.planned > 0; });
+    if (days.length >= 10){
+      var buckets = {};
+      days.forEach(function(e){ var k = Math.min(e.planned, 10); (buckets[k] = buckets[k] || []).push(e.completed/e.planned); });
+      var K = 0;
+      Object.keys(buckets).forEach(function(k){ var a = buckets[k]; if (a.length >= 3){ var m = a.reduce(function(s,v){return s+v;},0)/a.length; if (m >= 0.85 && +k > K) K = +k; } });
+      var nToday = state.day.tasks.length;
+      if (K) out.push({ key:'capacity', text: 'You keep 85% or more on days with up to '+K+' tasks.' + (nToday > K ? ' Today has '+nToday+', so consider moving one to tomorrow.' : ''), urgent: nToday > K });
+      var byWd = {}, all = 0;
+      days.forEach(function(e){ var wd = new Date(e.date+'T00:00:00').getDay(); (byWd[wd] = byWd[wd] || []).push(e.completed/e.planned); all += e.completed/e.planned; });
+      all /= days.length;
+      var worst = null;
+      Object.keys(byWd).forEach(function(wd){ var a = byWd[wd]; if (a.length >= 3){ var m = a.reduce(function(s,v){return s+v;},0)/a.length; if (!worst || m < worst.m) worst = { wd:+wd, m:m }; } });
+      if (worst && worst.m < all - 0.12){
+        var todayWd = new Date(state.today+'T00:00:00').getDay();
+        out.push({ key:'weekday', text: WD_LABELS[worst.wd]+'s are your weakest day ('+Math.round(worst.m*100)+'% vs '+Math.round(all*100)+'% overall). Plan lighter on '+WD_LABELS[worst.wd]+'s.', urgent: todayWd === worst.wd });
+      }
+    }
+    var big = 0, bigDone = 0, oth = 0, othDone = 0;
+    Object.keys(state.dayRecs).forEach(function(ds){ (state.dayRecs[ds].tasks || []).forEach(function(t){ if (t.weight === 3){ big++; if (t.completed) bigDone++; } else { oth++; if (t.completed) othDone++; } }); });
+    if (big >= 5 && oth >= 5 && othDone/oth - bigDone/big > 0.2){
+      out.push({ key:'big', text: 'Big promises get kept '+Math.round(bigDone/big*100)+'% of the time vs '+Math.round(othDone/oth*100)+'% for the rest. Break big ones into goal steps.', urgent: state.day.tasks.some(function(t){ return t.weight === 3 && !t.completed; }) });
+    }
+    (state.skills || []).forEach(function(s){
+      var best = null;
+      skillLevel(s).practices.forEach(function(p){ var a = banditArm(banditKey(s.id, p.type)); var n = a.a + a.b - 2; if (n >= 3){ var m = a.a/(a.a+a.b); if (!best || m > best.m) best = { p:p, m:m, n:n }; } });
+      if (best && best.m >= 0.7) out.push({ key:'best-'+s.id, text: 'For '+s.name+', '+best.p.type+' practice works best for you ('+Math.round(best.m*100)+'% follow-through). The coach suggests it more often.', urgent:false });
+    });
+    var dueN = state.reviews.filter(function(r){ return r.due <= state.today; }).length;
+    if (dueN >= 12) out.push({ key:'reviews', text: dueN+' reviews are waiting. Clear reviews before adding new material, or you will forget faster than you learn.', urgent:true });
+    if (state.brain.lr && state.brain.lrN >= 20){
+      var w = state.brain.lr, j = 1, bestJ = 1;
+      for (j=1;j<8;j++){ if (Math.abs(w[j]) > Math.abs(w[bestJ])) bestJ = j; }
+      out.push({ key:'lr-'+bestJ, text: 'Biggest factor in whether you finish a task: '+LR_NAMES[bestJ]+' ('+(w[bestJ] < 0 ? 'lowers' : 'raises')+' your odds). Learned from '+state.brain.lrN+' past tasks.', urgent:false });
+    }
+    return out.filter(function(i){ return !isInsightMuted(i.key); });
+  }
+  function insightFeedback(key, up){
+    var f = state.brain.insightFb[key] || { up:0, down:0 };
+    if (up) f.up++; else { f.down++; f.mutedUntil = addDays(state.today, 21); }
+    state.brain.insightFb[key] = f;
+    saveBrain();
+    toast(up ? 'Thanks, the coach will keep that.' : 'Muted for 3 weeks. The coach got that one wrong.');
+    render();
+  }
+  function insightHtml(i, compact){
+    return '<div class="insight'+(i.urgent ? ' urgent' : '')+'"><div class="insight-txt">'+escapeHtml(i.text)+'</div>' +
+      '<div class="insight-fb"><button class="fb" data-act="ins-up" data-k="'+i.key+'" aria-label="This is right">&#128077;</button>' +
+      '<button class="fb" data-act="ins-down" data-k="'+i.key+'" aria-label="This is wrong">&#128078;</button></div></div>';
+  }
+
+  /* ================================================================
+     SKILLS (Learn tab)
+     ================================================================ */
+  function libSkill(id){ return (window.COMPOUND_LIBRARY || []).find(function(s){ return s.id === id; }); }
+  function addLibrarySkill(id){
+    var L = libSkill(id);
+    if (!L || state.skills.some(function(s){ return s.libId === id; })) return;
+    state.skills.push({ id: uid(), libId: id, name: L.name, icon: L.icon, summary: L.summary, source:'library', levels: JSON.parse(JSON.stringify(L.levels)), level: 0, milestones: {}, createdAt: new Date().toISOString(), active: true });
+    safeSet('meta:skills', state.skills);
+    state.learnOpen = state.skills[state.skills.length-1].id;
+    render();
+    toast(L.name+' added. Set your starting level in its card.');
+  }
+  function skillMilestones(s){ var a = s.milestones[s.level] || []; return skillLevel(s).milestones.map(function(m, i){ return !!a[i]; }); }
+  function toggleMilestone(skillId, idx){
+    var s = state.skills.find(function(x){ return x.id === skillId; }); if (!s) return;
+    var a = skillMilestones(s); a[idx] = !a[idx]; s.milestones[s.level] = a;
+    if (a[idx]){ addBonusXp(25); chime('up'); } else { addBonusXp(-25); chime('down'); }
+    safeSet('meta:skills', state.skills); render();
+  }
+  function setSkillLevel(skillId, lvl, celebrate){
+    var s = state.skills.find(function(x){ return x.id === skillId; }); if (!s) return;
+    s.level = Math.max(0, Math.min(s.levels.length-1, lvl));
+    if (state.brain.picks.bySkill) delete state.brain.picks.bySkill[s.id];
+    safeSet('meta:skills', state.skills); saveBrain();
+    if (celebrate){ addBonusXp(50); chime('level'); say('level'); toast(s.name+': '+skillLevel(s).name); }
+    render();
+  }
+  function searchLink(title){ return 'https://www.google.com/search?q='+encodeURIComponent(title); }
+
+  function skillCardHtml(s){
+    var lv = skillLevel(s), ms = skillMilestones(s);
+    var done = ms.filter(Boolean).length, open = state.learnOpen === s.id;
+    var pct = ms.length ? Math.round(done/ms.length*100) : 0;
+    var last14 = state.practiceLog.filter(function(l){ return l.skillId === s.id && l.outcome === 'done' && dayDiff(l.date, state.today) < 14; });
+    var mins = last14.reduce(function(a, l){ return a + (l.minutes || 0); }, 0);
+    var head = '<button class="skill-head" data-act="skill-open" data-id="'+s.id+'" aria-expanded="'+open+'">' +
+      '<span class="skill-icon">'+escapeHtml(s.icon || '•')+'</span>' +
+      '<span class="skill-name"><b>'+escapeHtml(s.name)+'</b><small>Level '+(s.level+1)+' of '+s.levels.length+' · '+escapeHtml(lv.name)+(s.source === 'ai' ? ' · AI plan' : '')+'</small></span>' +
+      '<span class="skill-pct">'+pct+'%</span></button>' +
+      '<div class="wt-track" style="margin:8px 0 2px;"><div class="wt-fill" style="width:'+pct+'%;background:var(--teal);"></div></div>' +
+      '<div class="goal-meta">'+last14.length+' sessions · '+Math.round(mins/60*10)/10+' h in the last 14 days</div>';
+    if (!open) return '<div class="goal-card skill-card">'+head+'</div>';
+    var ladder = '<div class="ladder">'+s.levels.map(function(l, i){
+      return '<button class="rung'+(i === s.level ? ' on' : i < s.level ? ' past' : '')+'" data-act="skill-level" data-id="'+s.id+'" data-l="'+i+'" title="'+escapeHtml(l.goal)+'">'+(i+1)+'. '+escapeHtml(l.name)+'</button>';
+    }).join('')+'</div>';
+    var msHtml = lv.milestones.map(function(m, i){
+      return '<div class="step-line"><button class="step'+(ms[i] ? ' done' : '')+'" data-act="skill-ms" data-id="'+s.id+'" data-i="'+i+'"><span class="bx">'+CHECK_SVG+'</span><span class="lbl">'+escapeHtml(m)+'</span></button>' +
+        (ms[i] ? '<span class="xp-chip" style="background:var(--teal-light);color:var(--teal);border-color:#bcd6cb;">+25</span>' : '') + '</div>';
+    }).join('');
+    var allDone = ms.length && ms.every(Boolean);
+    var practices = lv.practices.map(function(p){
+      var key = banditKey(s.id, p.type), a = banditArm(key);
+      var n = Math.round(a.a + a.b - 2);
+      return '<div class="prac"><div><b>'+escapeHtml(p.type)+'</b> · '+p.minutes+' min'+(p.kind === 'new' ? ' · schedules reviews' : '')+'<div class="prac-txt">'+escapeHtml(p.text)+'</div></div>' +
+        '<span class="prac-score" title="what the coach has learned">'+(n >= 2 ? Math.round(a.a/(a.a+a.b)*100)+'%' : 'new')+(isMuted(key) ? ' · muted' : '')+'</span></div>';
+    }).join('');
+    var res = lv.resources.map(function(r){
+      return '<a class="res" href="'+searchLink(r.title)+'" target="_blank" rel="noopener">'+escapeHtml(r.title)+'<small>'+escapeHtml(r.kind || '')+'</small></a>';
+    }).join('');
+    var aiBits = '';
+    if (s.schedule && s.schedule.length){
+      aiBits += '<div class="field-label" style="margin-top:14px;">Weekly rhythm</div><div class="sched">'+s.schedule.map(function(d){ return '<div><b>'+escapeHtml(d.day)+'</b> '+escapeHtml(d.focus)+(d.minutes ? ' · '+d.minutes+' min' : '')+'</div>'; }).join('')+'</div>';
+    }
+    if (s.tips && s.tips.length) aiBits += '<div class="field-label" style="margin-top:14px;">Tips</div><ul class="tips">'+s.tips.map(function(t){ return '<li>'+escapeHtml(t)+'</li>'; }).join('')+'</ul>';
+    return '<div class="goal-card skill-card open">'+head +
+      (s.summary ? '<p class="goal-desc">'+escapeHtml(s.summary)+'</p>' : '') +
+      '<div class="field-label" style="margin-top:12px;">Levels (tap to set where you are)</div>' + ladder +
+      '<div class="goal-desc" style="margin-top:8px;"><b>Goal:</b> '+escapeHtml(lv.goal)+(lv.weeks ? ' · about '+lv.weeks+' weeks' : '')+'</div>' +
+      '<div class="field-label" style="margin-top:12px;">Milestones for this level</div><div class="steps" style="border-top:none;margin-top:0;">'+msHtml+'</div>' +
+      (allDone && s.level < s.levels.length-1 ? '<button class="btn small" style="margin-top:8px;" data-act="skill-up" data-id="'+s.id+'">Level up to '+escapeHtml(s.levels[s.level+1].name)+' (+50 xp)</button>' : '') +
+      '<div class="field-label" style="margin-top:14px;">Practice menu</div>'+practices +
+      '<div class="field-label" style="margin-top:14px;">Resources (opens a web search)</div><div class="res-list">'+res+'</div>' +
+      aiBits +
+      '<div class="goal-actions" style="margin-top:14px;flex-wrap:wrap;">' +
+        '<button class="link-btn" data-act="ai-fix" data-id="'+s.id+'">'+(s.source === 'ai' ? 'tell the AI what&#39;s wrong with this plan' : 'personalise this plan with AI')+'</button>' +
+        '<button class="link-btn" data-act="skill-pause" data-id="'+s.id+'">'+(s.active === false ? 'resume' : 'pause')+'</button>' +
+        '<button class="link-btn" data-act="skill-del" data-id="'+s.id+'">remove</button>' +
+      '</div>' +
+      (state.aiFixFor === s.id ? '<div class="inline-form" style="margin-top:10px;"><span class="field-label">What should change?</span><textarea class="reflect" id="aiFixText" style="margin-top:0;" placeholder="e.g. I already know hiragana, I only have 30 minutes on weekdays, focus more on speaking"></textarea>' +
+        '<div style="display:flex;gap:8px;margin-top:8px;"><button class="btn small" data-act="ai-fix-go" data-id="'+s.id+'">'+(state.aiBusy ? 'Working…' : 'Re-plan with AI')+'</button><button class="btn ghost small" data-act="ai-fix-cancel">Cancel</button></div></div>' : '') +
+    '</div>';
+  }
+
+  function renderLearn(){
+    var stats = computeStats();
+    var active = state.skills.filter(function(s){ return s.active !== false; });
+    var todayCards = active.map(function(s){
+      var pk = todayPick(s), p = pk.practice, key = banditKey(s.id, p.type);
+      var st = pk.status;
+      var status = st === 'added' ? '<span class="row-tag">on today&#39;s list</span>' : st === 'done' ? '<span class="row-tag" style="background:var(--teal-light);color:var(--teal);">done today</span>' : '';
+      return '<div class="prac-card"><div class="prac-top"><span class="skill-icon sm">'+escapeHtml(s.icon || '•')+'</span><b>'+escapeHtml(s.name)+'</b><span class="goal-meta" style="margin:0 0 0 auto;">'+escapeHtml(p.type)+' · '+p.minutes+' min</span></div>' +
+        '<div class="prac-main">'+escapeHtml(p.text)+'</div>' +
+        '<div class="prac-why">'+escapeHtml(armText(key))+'</div>' +
+        (st === 'open' ? '<div class="prac-btns"><button class="btn small" data-act="prac-add" data-id="'+s.id+'">Add to Today</button>' +
+          '<button class="btn ghost small" data-act="prac-done" data-id="'+s.id+'">Did it</button>' +
+          '<button class="btn ghost small" data-act="prac-skip" data-id="'+s.id+'">Not today</button>' +
+          '<button class="btn ghost small" data-act="prac-wrong" data-id="'+s.id+'">Wrong for me</button></div>' : '<div style="margin-top:8px;">'+status+'</div>') +
+      '</div>';
+    }).join('');
+    var due = state.reviews.filter(function(r){ return r.due <= state.today; }).sort(function(a,b){ return a.due < b.due ? -1 : 1; });
+    var reviewsHtml = due.slice(0, 8).map(function(r){
+      var s = state.skills.find(function(x){ return x.id === r.skillId; });
+      return '<div class="review"><div class="goal-meta" style="margin:0;">'+(s ? escapeHtml(s.name)+' · ' : '')+'learned '+prettyDate(r.learnedOn)+(r.reps ? ' · review '+(r.reps+1) : '')+'</div>' +
+        '<div class="prac-txt" style="margin:4px 0 8px;">Recall without notes: '+escapeHtml(r.text)+'</div>' +
+        '<div class="grade-row"><button data-act="rev" data-g="again" data-id="'+r.id+'">Forgot</button><button data-act="rev" data-g="hard" data-id="'+r.id+'">Hard</button><button data-act="rev" data-g="good" data-id="'+r.id+'">Good</button><button data-act="rev" data-g="easy" data-id="'+r.id+'">Easy</button></div></div>';
+    }).join('');
+    var lib = (window.COMPOUND_LIBRARY || []).filter(function(L){ return !state.skills.some(function(s){ return s.libId === L.id; }); });
+    var ins = brainInsights(stats);
+    var conf = aiConf();
+
+    return '' +
+      '<h2 class="section-title">Learn</h2>' +
+      '<p class="section-sub">Plans for the skills you&#39;re building. Each day the coach picks a practice for every skill and learns from what you finish, skip or mark wrong.</p>' +
+
+      (active.length ? '<div class="group-label" style="margin-bottom:10px;">Today&#39;s practice</div>'+todayCards :
+        '<div class="empty" style="padding:22px;"><div class="big">Add a skill to start.</div>Pick one below or plan any skill with AI.</div>') +
+
+      (due.length ? '<div class="group-label" style="margin:22px 0 10px;">Reviews due · '+due.length+'</div><p class="section-sub" style="margin-top:-4px;">Things you learned come back at growing intervals. Grade honestly: forgetting brings it back sooner.</p>'+reviewsHtml : '') +
+
+      '<div class="group-label" style="margin:24px 0 10px;">AI coach</div>' + renderCoachChat(conf) +
+
+      (state.skills.length ? '<div class="group-label" style="margin:24px 0 10px;">Your skills</div>'+state.skills.map(skillCardHtml).join('') : '') +
+
+      '<div class="group-label" style="margin:24px 0 10px;">Add a skill</div>' +
+      (lib.length ? '<div class="chip-row" style="flex-wrap:wrap;">'+lib.map(function(L){ return '<button class="chip" data-act="lib-add" data-id="'+L.id+'"><b>'+escapeHtml(L.icon)+'</b> '+escapeHtml(L.name)+'</button>'; }).join('')+'</div>' : '') +
+      renderAiPlanForm(conf) +
+
+      '<div class="group-label" style="margin:24px 0 10px;">What the coach has learned about you</div>' +
+      (ins.length ? ins.map(function(i){ return insightHtml(i); }).join('') : '<p class="section-sub">Not enough history yet. After about 10 logged days the coach starts spotting patterns in what you finish and skip.</p>') +
+      '<p class="section-sub" style="margin-top:8px;">Learned from '+Object.keys(state.dayRecs || {}).length+' past days and '+state.practiceLog.length+' practice records, all on this device. ' +
+        '<button class="link-btn" data-act="brain-reset">forget everything it learned</button></p>';
+  }
+
+  /* ================================================================
+     CLAUDE (optional, your own API key)
+     ================================================================ */
+  var AI_MODELS = [ { id:'claude-haiku-5-5', label:'Haiku 5.5 · fast, cheapest' }, { id:'claude-sonnet-5-5', label:'Sonnet 5.5 · smarter plans' } ];
+  function aiConf(){ try{ return JSON.parse(window.localStorage.getItem('compoundAI') || '{}') || {}; }catch(e){ return {}; } }
+  function aiSaveConf(c){ try{ window.localStorage.setItem('compoundAI', JSON.stringify(c)); }catch(e){} }
+  async function callClaude(system, messages, maxTokens){
+    var c = aiConf();
+    if (!c.key) throw new Error('Add your Anthropic API key first (AI settings).');
+    if (navigator.onLine === false) throw new Error('You are offline. AI features need internet.');
+    var res;
+    try{
+      res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{ 'content-type':'application/json', 'x-api-key': c.key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+        body: JSON.stringify({ model: c.model || 'claude-haiku-5-5', max_tokens: maxTokens || 1500, system: system, messages: messages })
+      });
+    }catch(e){ throw new Error('Could not reach Anthropic. Check your connection.'); }
+    var data = null; try{ data = await res.json(); }catch(e){}
+    if (!res.ok){
+      if (res.status === 401) throw new Error('The API key was rejected. Check it in AI settings.');
+      if (res.status === 429) throw new Error('Rate limited by Anthropic. Wait a minute and try again.');
+      throw new Error((data && data.error && data.error.message) || ('Anthropic returned an error ('+res.status+').'));
+    }
+    return ((data && data.content) || []).filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.text; }).join('\n');
+  }
+  function extractJson(text){
+    var t = String(text || '').trim();
+    var m = t.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (m) t = m[1];
+    var a = t.indexOf('{'), z = t.lastIndexOf('}');
+    if (a < 0 || z < 0) throw new Error('The AI reply had no plan in it. Try again.');
+    return JSON.parse(t.slice(a, z+1));
+  }
+  function cleanStr(v, n){ return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, n || 200); }
+  function normalizePlan(p){
+    if (!p || !Array.isArray(p.levels) || !p.levels.length) throw new Error('The plan came back without levels. Try again.');
+    var levels = p.levels.slice(0, 8).map(function(l){
+      var practices = (Array.isArray(l.practices) ? l.practices : []).slice(0, 6).map(function(x){
+        var kind = ['new','review','skill'].indexOf(x.kind) >= 0 ? x.kind : 'skill';
+        return { type: cleanStr(x.type || 'practice', 24).toLowerCase(), kind: kind, minutes: Math.max(5, Math.min(180, parseInt(x.minutes, 10) || 20)), text: cleanStr(x.text, 220) };
+      }).filter(function(x){ return x.text; });
+      if (!practices.length) practices = [{ type:'practice', kind:'skill', minutes:20, text:'Practice '+cleanStr(l.name, 40) }];
+      var seen = {};
+      practices.forEach(function(x){ var b = x.type, i = 2; while (seen[x.type]){ x.type = b+' '+i++; } seen[x.type] = 1; });
+      return {
+        name: cleanStr(l.name, 40) || 'Level', goal: cleanStr(l.goal, 220), weeks: parseInt(l.weeks, 10) || null,
+        milestones: (Array.isArray(l.milestones) ? l.milestones : []).slice(0, 6).map(function(m){ return cleanStr(m, 160); }).filter(Boolean),
+        practices: practices,
+        resources: (Array.isArray(l.resources) ? l.resources : []).slice(0, 6).map(function(r){ return typeof r === 'string' ? { title: cleanStr(r, 120), kind:'' } : { title: cleanStr(r.title, 120), kind: cleanStr(r.kind, 30) }; }).filter(function(r){ return r.title; })
+      };
+    });
+    return {
+      name: cleanStr(p.name || p.skill, 40), summary: cleanStr(p.summary, 300), levels: levels,
+      start: Math.max(0, Math.min(levels.length-1, parseInt(p.start_level, 10) || 0)),
+      schedule: (Array.isArray(p.weekly_schedule) ? p.weekly_schedule : []).slice(0, 7).map(function(d){ return { day: cleanStr(d.day, 12), focus: cleanStr(d.focus, 100), minutes: parseInt(d.minutes, 10) || null }; }),
+      tips: (Array.isArray(p.tips) ? p.tips : []).slice(0, 6).map(function(t){ return cleanStr(t, 200); }).filter(Boolean)
+    };
+  }
+  var PLAN_SYSTEM = 'You are a learning coach inside a personal habit and goals app. Design a practical, realistic plan that takes the learner from where they are now to their target. ' +
+    'Reply with JSON only, no prose before or after, in exactly this shape: ' +
+    '{"name":string,"summary":string,"start_level":integer,"levels":[{"name":string,"goal":string,"weeks":integer,"milestones":[string],"practices":[{"type":string,"kind":"new"|"review"|"skill","minutes":integer,"text":string}],"resources":[{"title":string,"kind":string}]}],"weekly_schedule":[{"day":string,"focus":string,"minutes":integer}],"tips":[string]}. ' +
+    'Rules: 3 to 6 levels in order from beginner to the target. Each level has 3 to 5 milestones that can be checked off objectively. Each level has 3 to 5 practices; type is one or two lowercase words (for example handwriting, listening, flashcards, drills, project, mock interview); each practice fits in one sitting and its minutes do not exceed the learner\'s daily minutes; kind is new for learning new material (the app schedules spaced reviews of it), review for revisiting, skill for applied practice. ' +
+    'Prefer active practice (recall, writing by hand, speaking, building) over passive reading. Resources: 2 to 5 real, widely known books, courses, apps or sites, given by their exact title; never invent resources and never include URLs. start_level is the index of the level that matches the learner now. weekly_schedule covers 7 days and respects their time budget. If the learner corrects a previous plan, accept the correction and change the plan accordingly.';
+  function planInputsFromForm(){
+    return {
+      skill: cleanStr(document.getElementById('aiSkill').value, 60),
+      current_level: cleanStr(document.getElementById('aiNow').value, 200),
+      target: cleanStr(document.getElementById('aiTarget').value, 200),
+      minutes_per_day: parseInt(document.getElementById('aiMins').value, 10) || 30,
+      deadline: document.getElementById('aiBy').value || null,
+      notes: cleanStr(document.getElementById('aiNotes').value, 400)
+    };
+  }
+  async function aiPlanNew(){
+    var inp = planInputsFromForm();
+    if (!inp.skill){ toast('Name the skill first'); return; }
+    state.aiBusy = true; state.aiError = null; render();
+    try{
+      var txt = await callClaude(PLAN_SYSTEM, [{ role:'user', content: 'Plan this for me as JSON:\n'+JSON.stringify(inp) }], 3000);
+      var plan = normalizePlan(extractJson(txt));
+      state.skills.push({ id: uid(), libId: null, name: plan.name || inp.skill, icon: (inp.skill || '?').charAt(0).toUpperCase(), summary: plan.summary, source:'ai',
+        levels: plan.levels, level: plan.start, milestones: {}, schedule: plan.schedule, tips: plan.tips, aiInputs: inp, aiPlanRaw: txt.slice(0, 12000), createdAt: new Date().toISOString(), active: true });
+      safeSet('meta:skills', state.skills);
+      state.learnOpen = state.skills[state.skills.length-1].id;
+      state.aiPlanOpen = false;
+      toast('Plan ready: '+(plan.name || inp.skill));
+    }catch(e){ state.aiError = e.message; }
+    state.aiBusy = false; render();
+  }
+  function practiceStatsFor(s){
+    var out = {};
+    state.practiceLog.filter(function(l){ return l.skillId === s.id && dayDiff(l.date, state.today) < 28; }).forEach(function(l){
+      var o = out[l.type] = out[l.type] || { done:0, skipped:0, wrong:0 }; if (o[l.outcome] != null) o[l.outcome]++;
+    });
+    return out;
+  }
+  async function aiFixPlan(skillId){
+    var s = state.skills.find(function(x){ return x.id === skillId; }); if (!s) return;
+    var fix = cleanStr((document.getElementById('aiFixText') || {}).value, 600);
+    if (!fix){ toast('Write what should change'); return; }
+    state.aiBusy = true; state.aiError = null; render();
+    try{
+      var current = { name: s.name, summary: s.summary, start_level: s.level, levels: s.levels, weekly_schedule: s.schedule || [], tips: s.tips || [] };
+      var msgs = [
+        { role:'user', content: 'Here is my current plan as JSON:\n'+JSON.stringify(current) },
+        { role:'assistant', content: 'Understood. What should change?' },
+        { role:'user', content: 'Correction: '+fix+'\nMy practice in the last 4 weeks by type (done/skipped/marked wrong): '+JSON.stringify(practiceStatsFor(s))+
+          '\nMilestones I have ticked at my current level: '+JSON.stringify(skillMilestones(s))+'\nReturn the full revised plan as JSON in the same shape.' }
+      ];
+      var txt = await callClaude(PLAN_SYSTEM, msgs, 3000);
+      var plan = normalizePlan(extractJson(txt));
+      s.levels = plan.levels; s.level = plan.start; s.summary = plan.summary || s.summary; s.schedule = plan.schedule; s.tips = plan.tips;
+      s.milestones = {}; s.source = 'ai'; s.aiPlanRaw = txt.slice(0, 12000);
+      if (state.brain.picks.bySkill) delete state.brain.picks.bySkill[s.id];
+      safeSet('meta:skills', state.skills); saveBrain();
+      state.aiFixFor = null;
+      toast('Plan updated');
+    }catch(e){ state.aiError = e.message; toast(e.message); }
+    state.aiBusy = false; render();
+  }
+  function renderAiPlanForm(conf){
+    if (!state.aiPlanOpen) return '<button class="coach-btn" data-act="ai-plan-open" style="margin-top:4px;">&#10022; Plan any skill with AI</button>';
+    return '<div class="inline-form ai-form" style="margin-top:6px;">' +
+      (conf.key ? '' : '<p class="section-sub" style="margin:0 0 10px;color:var(--brick);">Add your API key in <button class="link-btn" data-act="ai-settings">AI settings</button> first.</p>') +
+      '<div class="field-row"><div><span class="field-label">Skill</span><input type="text" id="aiSkill" maxlength="60" placeholder="e.g. Spanish, guitar, public speaking, SQL"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Where you are now</span><input type="text" id="aiNow" maxlength="200" placeholder="e.g. complete beginner, know basic chords"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Target</span><input type="text" id="aiTarget" maxlength="200" placeholder="e.g. hold a 10 minute conversation, play 5 songs"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Minutes a day</span><input type="number" id="aiMins" min="5" max="300" value="30"></div>' +
+        '<div><span class="field-label">By (optional)</span><input type="date" id="aiBy"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Anything else</span><input type="text" id="aiNotes" maxlength="400" placeholder="e.g. I learn best by doing, weekends are free"></div></div>' +
+      (state.aiError ? '<p class="section-sub" style="color:var(--brick);margin:0 0 8px;">'+escapeHtml(state.aiError)+'</p>' : '') +
+      '<div style="display:flex;gap:8px;"><button class="btn small" data-act="ai-plan-go"'+(state.aiBusy ? ' disabled' : '')+'>'+(state.aiBusy ? 'Planning… (10 to 30 s)' : 'Make my plan')+'</button>' +
+      '<button class="btn ghost small" data-act="ai-plan-close">Cancel</button></div></div>';
+  }
+
+  // ---- coach chat ----
+  function coachContext(){
+    var stats = computeStats();
+    var ser = compoundSeries(stats.summary);
+    var smap = summaryMap(stats);
+    var week = [];
+    for (var i=7;i>=1;i--){ var d = addDays(state.today, -i), sc = dayScore(d, smap); week.push({ date:d, pct: sc.pct == null ? null : Math.round(sc.pct*100) }); }
+    var goals = departureItems().filter(function(it){ return it.kind === 'goal'; }).map(function(it){ return { title: it.title, due: it.date, status: it.st.label, work_pct: Math.round((it.st.work || 0)*100) }; });
+    return {
+      today: state.today, weekday: WD_LABELS[new Date(state.today+'T00:00:00').getDay()],
+      streak_days: stats.showUpStreak, level: levelInfo(stats.xp).level, compound_balance: +(ser.vals[ser.vals.length-1] || 1).toFixed(2),
+      tasks_today: state.day.tasks.map(function(t){ return { text: t.text, done: !!t.completed, size: t.weight === 1 ? 'quick' : t.weight === 3 ? 'big' : 'standard' }; }),
+      day_closed: !!state.day.closedOut,
+      chores_today: dayChores(state.today).map(function(r){ return { chore: r.chore.title, done: r.ticked, note: r.label || undefined }; }),
+      last_7_days_pct: week,
+      goals: goals,
+      skills: state.skills.map(function(s){ return { name: s.name, level: (s.level+1)+'/'+s.levels.length+' '+skillLevel(s).name, milestones_done: skillMilestones(s).filter(Boolean).length+'/'+skillLevel(s).milestones.length, last_4_weeks: practiceStatsFor(s), paused: s.active === false }; }),
+      reviews_due: state.reviews.filter(function(r){ return r.due <= state.today; }).length,
+      board_promises_open: state.notes.filter(function(n){ return !n.doneAt; }).map(function(n){ return n.text + (n.who ? ' (for '+n.who+')' : ''); }).slice(0, 10),
+      learned_patterns: brainInsights(stats).map(function(i){ return i.text; })
+    };
+  }
+  var COACH_SYSTEM = 'You are the coach inside Compound, the user\'s personal ledger of promises, tasks, chores, goals and skills. You get a JSON snapshot of their data with each message. ' +
+    'Be direct, specific and practical. Use their real tasks, goals and numbers. Keep replies under 150 words unless they ask for more. No motivational fluff. ' +
+    'If you are not sure, say so. If the user says you got something wrong, accept it plainly and adjust. ' +
+    'When you suggest concrete tasks for today, end your reply with a fenced block exactly like:\n```tasks\n[{"text":"task text","size":"quick|standard|big"}]\n``` with at most 5 tasks.';
+  function parseTasksBlock(text){
+    var m = String(text || '').match(/```tasks\s*([\s\S]*?)```/);
+    if (!m) return { text: text, tasks: [] };
+    var tasks = [];
+    try{ tasks = JSON.parse(m[1]).slice(0, 5).map(function(t){ return { text: cleanStr(t.text, 140), weight: t.size === 'quick' ? 1 : t.size === 'big' ? 3 : 2 }; }).filter(function(t){ return t.text; }); }catch(e){}
+    return { text: text.replace(m[0], '').trim(), tasks: tasks };
+  }
+  async function coachSend(msg){
+    msg = cleanStr(msg, 800);
+    if (!msg) return;
+    state.chat.push({ role:'user', content: msg, at: new Date().toISOString() });
+    state.chatBusy = true; render();
+    try{
+      var history = state.chat.filter(function(m){ return !m.error; }).slice(-12).map(function(m){ return { role: m.role, content: m.content }; });
+      while (history.length && history[0].role !== 'user') history.shift();
+      history[history.length-1] = { role:'user', content: 'My data right now:\n'+JSON.stringify(coachContext())+'\n\n'+msg };
+      var txt = await callClaude(COACH_SYSTEM, history, 900);
+      state.chat.push({ role:'assistant', content: txt, at: new Date().toISOString() });
+    }catch(e){
+      state.chat.push({ role:'assistant', content: 'Error: '+e.message, at: new Date().toISOString(), error: true });
+    }
+    state.chat = state.chat.slice(-40);
+    safeSet('meta:aichat', state.chat);
+    state.chatBusy = false; render();
+    var log = document.getElementById('chatLog'); if (log) log.scrollTop = log.scrollHeight;
+  }
+  function renderCoachChat(conf){
+    if (!conf.key){
+      return '<div class="coach-box"><p class="section-sub" style="margin:0 0 10px;">Ask the coach to plan your day, explain why you keep missing things, or adjust a skill plan. It uses Claude with your own Anthropic API key, which stays on this device.</p>' +
+        '<button class="btn small" data-act="ai-settings">Set up AI</button></div>';
+    }
+    var msgs = state.chat.slice(-12).map(function(m, i){
+      if (m.role === 'user') return '<div class="msg me">'+escapeHtml(m.content)+'</div>';
+      var parsed = parseTasksBlock(m.content);
+      var idx = state.chat.length - Math.min(12, state.chat.length) + i;
+      var add = parsed.tasks.length ? '<div class="msg-tasks">'+parsed.tasks.map(function(t, k){
+        var added = m.added && m.added[k];
+        return '<button class="chip'+(added ? ' on' : '')+'" data-act="chat-add" data-m="'+idx+'" data-k="'+k+'"'+(added ? ' disabled' : '')+'>'+(added ? '&#10003; ' : '+ ')+escapeHtml(t.text)+'</button>';
+      }).join('')+'</div>' : '';
+      return '<div class="msg ai'+(m.error ? ' err' : '')+'">'+escapeHtml(parsed.text).replace(/\n/g, '<br>')+add+
+        (m.error ? '' : '<div class="msg-fb"><button class="fb" data-act="chat-wrong" data-m="'+idx+'">that&#39;s wrong</button></div>')+'</div>';
+    }).join('');
+    var quick = ['Plan my day from my goals and skills', 'Why do I keep missing tasks?', 'What should I focus on this week?', 'Review my Japanese plan'];
+    return '<div class="coach-box">' +
+      (msgs ? '<div class="chat-log" id="chatLog">'+msgs+(state.chatBusy ? '<div class="msg ai">Thinking…</div>' : '')+'</div>' : '') +
+      '<div class="chip-row" style="flex-wrap:wrap;margin:8px 0;">'+quick.map(function(q){ return '<button class="chip" data-act="chat-quick" data-q="'+escapeHtml(q)+'">'+escapeHtml(q)+'</button>'; }).join('')+'</div>' +
+      '<div style="display:flex;gap:8px;"><input type="text" id="chatInput" maxlength="800" placeholder="Ask your coach…" style="flex:1;min-width:0;">' +
+      '<button class="btn" data-act="chat-send"'+(state.chatBusy ? ' disabled' : '')+'>Send</button></div>' +
+      '<p class="section-sub" style="margin:8px 0 0;">Sends a summary of your data to Anthropic only when you press Send. ' +
+        '<button class="link-btn" data-act="ai-settings">AI settings</button> · <button class="link-btn" data-act="chat-clear">clear chat</button></p>' +
+    '</div>';
+  }
+  function openAiSettings(){
+    var modalRoot = document.getElementById('modalRoot');
+    var c = aiConf();
+    modalRoot.innerHTML = '<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-label="AI settings">' +
+      '<h3>AI settings</h3>' +
+      '<p>Compound calls Claude directly from this device with your own Anthropic API key. Create one at console.anthropic.com → API keys. The key is stored only on this device and is never included in exports.</p>' +
+      '<div class="field-row"><div><span class="field-label">API key</span><input type="password" id="aiKey" autocomplete="off" placeholder="sk-ant-…" value="'+escapeHtml(c.key || '')+'"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Model</span><select id="aiModel">'+AI_MODELS.map(function(m){ return '<option value="'+m.id+'"'+((c.model || 'claude-haiku-5-5') === m.id ? ' selected' : '')+'>'+m.label+'</option>'; }).join('')+'</select></div></div>' +
+      '<p id="aiTestMsg" style="min-height:18px;"></p>' +
+      '<div class="row-btns">' + (c.key ? '<button class="btn ghost small" id="aiRemove">Remove key</button>' : '') +
+        '<button class="btn ghost small" id="aiTest">Test</button><button class="btn small" id="aiSaveBtn">Save</button></div>' +
+    '</div></div>';
+    function readForm(){ return { key: (document.getElementById('aiKey').value || '').trim(), model: document.getElementById('aiModel').value }; }
+    document.getElementById('aiSaveBtn').onclick = function(){ aiSaveConf(readForm()); modalRoot.innerHTML = ''; render(); toast('AI settings saved'); };
+    document.getElementById('aiTest').onclick = async function(){
+      var out = document.getElementById('aiTestMsg');
+      aiSaveConf(readForm()); out.textContent = 'Testing…';
+      try{ var t = await callClaude('Reply with the single word OK.', [{ role:'user', content:'Test' }], 10); out.textContent = 'Connected. Claude replied: '+t.slice(0, 40); }
+      catch(e){ out.textContent = e.message; }
+    };
+    var rm = document.getElementById('aiRemove');
+    if (rm) rm.onclick = function(){ aiSaveConf({}); modalRoot.innerHTML = ''; render(); toast('Key removed from this device'); };
+    document.getElementById('modalBg').addEventListener('click', function(e){ if (e.target.id === 'modalBg') modalRoot.innerHTML = ''; });
+  }
+
+  /* ---------------- Today additions ---------------- */
+  function todayChoresHtml(){
+    var items = dayChores(state.today);
+    if (!items.length) return '';
+    var done = items.filter(function(r){ return r.ticked; }).length;
+    return '<div class="group-head"><span class="group-label">Chores today · '+done+' / '+items.length+'</span>' +
+      '<button class="link-btn" data-act="goto" data-tab="calendar">calendar</button></div>' +
+      '<div class="ledger-rows">'+choreRowsHtml(items, state.today)+'</div>';
+  }
+  function todayPracticeHtml(){
+    if (state.day.closedOut) return '';
+    var open = state.skills.filter(function(s){ return s.active !== false; }).map(function(s){ return { s:s, pk: todayPick(s) }; })
+      .filter(function(o){ return o.pk.status === 'open'; });
+    if (!open.length) return '';
+    return '<div class="prac-strip"><span class="field-label">Suggested practice · tap to add</span><div class="chip-row" style="flex-wrap:wrap;margin:6px 0 0;">' +
+      open.map(function(o){
+        var p = o.pk.practice;
+        return '<button class="chip" data-act="prac-add" data-id="'+o.s.id+'" title="'+escapeHtml(p.text)+'"><b>'+escapeHtml(o.s.icon || '•')+'</b> '+escapeHtml(p.type)+' · '+p.minutes+' min</button>';
+      }).join('') + '</div></div>';
+  }
+  function todayCoachHtml(riskCount){
+    var ins = brainInsights(computeStats()).filter(function(i){ return i.urgent; });
+    if (riskCount && !isInsightMuted('slip')){
+      ins.unshift({ key:'slip', urgent:true, text: riskCount === 1 ?
+        'One task is flagged as likely to slip, based on '+state.brain.lrN+' past tasks. Do it early or make it smaller.' :
+        riskCount+' tasks are flagged as likely to slip, based on '+state.brain.lrN+' past tasks. Do them early or make them smaller.' });
+    }
+    if (!ins.length) return '';
+    return '<div class="coach-notes"><div class="group-label" style="margin-bottom:8px;">Coach notes</div>'+ins.slice(0, 3).map(function(i){ return insightHtml(i); }).join('')+'</div>';
+  }
+
+  /* ---------------- delegated handlers for the new tabs ---------------- */
+  root.addEventListener('click', function(e){
+    var el = e.target.closest('[data-act]');
+    if (!el || !root.contains(el)) return;
+    var a = el.dataset.act, id = el.dataset.id;
+    if (a === 'cal-day'){ state.calSel = el.dataset.d; render(); }
+    else if (a === 'cal-prev' || a === 'cal-next'){
+      var ym = state.calMonth || state.today.slice(0,7);
+      state.calMonth = addMonths(ym+'-01', a === 'cal-prev' ? -1 : 1).slice(0,7); render();
+    }
+    else if (a === 'goto'){ state.activeTab = el.dataset.tab; render(); window.scrollTo(0, 0); }
+    else if (a === 'chore-tick'){ toggleChore(id, el.dataset.d, el); }
+    else if (a === 'chore-new'){ state.choreFormOpen = 'new'; render(); var t = document.getElementById('chTitle'); if (t) t.focus(); }
+    else if (a === 'chore-edit'){ state.choreFormOpen = id; render(); }
+    else if (a === 'chore-cancel'){ state.choreFormOpen = null; render(); }
+    else if (a === 'chore-save'){ saveChoreForm(); }
+    else if (a === 'chore-wd'){ el.classList.toggle('on'); el.setAttribute('aria-pressed', el.classList.contains('on')); }
+    else if (a === 'chore-stop'){
+      showConfirm('Stop this chore?', 'It will no longer be due from today. Its history stays on the calendar.', function(){
+        var c = state.chores.find(function(x){ return x.id === id; }); if (c){ c.archivedAt = state.today; safeSet('meta:chores', state.chores); render(); }
+      });
+    }
+    else if (a === 'chore-del'){ state.chores = state.chores.filter(function(x){ return x.id !== id; }); safeSet('meta:chores', state.chores); render(); }
+    else if (a === 'prac-add'){ practiceAction(id, 'add', el); }
+    else if (a === 'prac-done'){ practiceAction(id, 'done', el); }
+    else if (a === 'prac-skip'){ practiceAction(id, 'skip', el); }
+    else if (a === 'prac-wrong'){ practiceAction(id, 'wrong', el); }
+    else if (a === 'rev'){ rateReview(id, el.dataset.g); }
+    else if (a === 'lib-add'){ addLibrarySkill(id); }
+    else if (a === 'skill-open'){ state.learnOpen = state.learnOpen === id ? null : id; state.aiFixFor = null; render(); }
+    else if (a === 'skill-level'){ setSkillLevel(id, parseInt(el.dataset.l, 10), false); }
+    else if (a === 'skill-up'){ var s0 = state.skills.find(function(x){ return x.id === id; }); if (s0) setSkillLevel(id, s0.level + 1, true); }
+    else if (a === 'skill-ms'){ toggleMilestone(id, parseInt(el.dataset.i, 10)); }
+    else if (a === 'skill-pause'){ var s1 = state.skills.find(function(x){ return x.id === id; }); if (s1){ s1.active = s1.active === false; safeSet('meta:skills', state.skills); render(); } }
+    else if (a === 'skill-del'){
+      showConfirm('Remove this skill?', 'Its plan goes away. Practice already logged stays in your history.', function(){
+        state.skills = state.skills.filter(function(x){ return x.id !== id; }); state.reviews = state.reviews.filter(function(r){ return r.skillId !== id; });
+        safeSet('meta:skills', state.skills); safeSet('meta:reviews', state.reviews); render();
+      });
+    }
+    else if (a === 'ai-settings'){ openAiSettings(); }
+    else if (a === 'ai-plan-open'){ state.aiPlanOpen = true; state.aiError = null; render(); }
+    else if (a === 'ai-plan-close'){ state.aiPlanOpen = false; render(); }
+    else if (a === 'ai-plan-go'){ if (!state.aiBusy) aiPlanNew(); }
+    else if (a === 'ai-fix'){ if (!aiConf().key){ openAiSettings(); return; } state.aiFixFor = id; render(); var ft = document.getElementById('aiFixText'); if (ft) ft.focus(); }
+    else if (a === 'ai-fix-cancel'){ state.aiFixFor = null; render(); }
+    else if (a === 'ai-fix-go'){ if (!state.aiBusy) aiFixPlan(id); }
+    else if (a === 'chat-send'){ var inp = document.getElementById('chatInput'); if (inp && !state.chatBusy) coachSend(inp.value); }
+    else if (a === 'chat-quick'){ if (!state.chatBusy) coachSend(el.dataset.q); }
+    else if (a === 'chat-clear'){ state.chat = []; safeSet('meta:aichat', state.chat); render(); }
+    else if (a === 'chat-wrong'){
+      var inp2 = document.getElementById('chatInput');
+      if (inp2){ inp2.value = 'That was wrong: '; inp2.focus(); }
+    }
+    else if (a === 'chat-add'){
+      var m = state.chat[parseInt(el.dataset.m, 10)];
+      var t2 = m && parseTasksBlock(m.content).tasks[parseInt(el.dataset.k, 10)];
+      if (t2 && !state.day.closedOut){
+        state.day.tasks.push({ id: uid(), text: t2.text, completed:false, goalRef:null, weight: t2.weight });
+        m.added = m.added || {}; m.added[el.dataset.k] = true;
+        saveDay(); syncTodaySummary(); saveSummary(); safeSet('meta:aichat', state.chat);
+        toast('Added to Today'); render();
+      } else if (state.day.closedOut) toast('Today is closed. Reopen it to add tasks.');
+    }
+    else if (a === 'ins-up' || a === 'ins-down'){ insightFeedback(el.dataset.k, a === 'ins-up'); }
+    else if (a === 'brain-reset'){
+      showConfirm('Forget what the coach learned?', 'This resets practice preferences, muted suggestions and learned patterns. Your tasks, skills and reviews stay.', function(){
+        var seen = state.brain.seenDays; state.brain = defaultBrain(); state.brain.seenDays = seen; saveBrain(); trainBrain(); render(); toast('The coach starts fresh.');
+      });
+    }
+  });
+  root.addEventListener('change', function(e){
+    var el = e.target;
+    if (el.id === 'chFreq'){
+      var f = document.getElementById('choreForm'); if (!f) return;
+      var v = el.value;
+      f.querySelector('.ch-times').hidden = !(v === 'weekly' || v === 'monthly');
+      f.querySelector('.ch-days').hidden = v !== 'days';
+    } else if (el.id === 'chDur'){
+      var f2 = document.getElementById('choreForm'); if (f2) f2.querySelector('.ch-end').hidden = el.value !== 'custom';
+    }
+  });
+  root.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter') return;
+    if (e.target.id === 'chatInput' && !state.chatBusy){ e.preventDefault(); coachSend(e.target.value); }
+  });
+
 
   /* ---------------- Log ---------------- */
   function logEntriesForYear(y){ return (state.logYears[String(y)]||[]).slice(); }
@@ -2003,6 +3136,7 @@
     if (!t) return;
     t.completed = !t.completed;
     if (t.goalRef) adjustGoalStat(t.goalRef, 'completed', t.completed ? 1 : -1);
+    if (t.skillRef) onSkillTaskToggled(t);
     saveDay(); if (t.goalRef) saveGoals();
     syncTodaySummary(); saveSummary();
     if (t.completed){
@@ -2108,6 +3242,11 @@
     var t = state.day.tasks.find(function(x){return x.id===id;});
     if (!t) return;
     state.day.tasks = state.day.tasks.filter(function(x){return x.id!==id;});
+    if (t.skillRef){
+      if (t.completed){ t.completed = false; onSkillTaskToggled(t); }
+      var pk = state.brain.picks.date === state.today && state.brain.picks.bySkill[t.skillRef.skillId];
+      if (pk && pk.type === t.skillRef.type){ pk.status = 'open'; saveBrain(); }
+    }
     if (t.goalRef){ adjustGoalStat(t.goalRef, 'planned', -1); if (t.completed) adjustGoalStat(t.goalRef, 'completed', -1); }
     saveDay(); if (t.goalRef) saveGoals();
     syncTodaySummary(); saveSummary();
@@ -2189,7 +3328,7 @@
   document.getElementById('voiceBtn').onclick = openVoiceSettings;
 
   document.getElementById('resetBtn').onclick = function(){
-    showConfirm('Reset everything?', 'This permanently deletes every goal, countdown, board note, log entry, and logged day. There is no undo.', async function(){
+    showConfirm('Reset everything?', 'This permanently deletes every goal, countdown, chore, skill, board note, log entry, and logged day. Your AI key stays until you remove it in AI settings. There is no undo.', async function(){
       await deleteAllKeys();
       state = freshState();
       await safeSet('meta:app', state.meta);
@@ -2205,7 +3344,8 @@
       var allLogs = {};
       for (var y in state.logYears){ allLogs[y] = state.logYears[y]; }
       var payload = { exportedAt: new Date().toISOString(), todayDate: state.today, goals: state.goals, events: state.events, days: stats.summary, today: state.day, log: allLogs,
-        notes: state.notes, bonusXp: state.meta.bonusXp || 0, voice: voiceSettings() };
+        notes: state.notes, bonusXp: state.meta.bonusXp || 0, voice: voiceSettings(),
+        chores: state.chores, choreLog: state.choreLog, skills: state.skills, practiceLog: state.practiceLog, reviews: state.reviews, brain: state.brain };
       var blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
@@ -2261,6 +3401,19 @@
           state.notes = state.notes.concat(data.notes.filter(function(n){ return n && n.id && !haveIds[n.id]; }));
           await saveNotes();
         }
+        function mergeById(have, incoming){
+          var ids = {}; have.forEach(function(x){ if (x && x.id) ids[x.id] = true; });
+          return have.concat((incoming || []).filter(function(x){ return x && x.id && !ids[x.id]; }));
+        }
+        if (Array.isArray(data.chores)){ state.chores = mergeById(state.chores, data.chores); await safeSet('meta:chores', state.chores); }
+        if (data.choreLog && typeof data.choreLog === 'object'){
+          Object.keys(data.choreLog).forEach(function(d){ state.choreLog[d] = Object.assign({}, data.choreLog[d], state.choreLog[d] || {}); });
+          await safeSet('meta:chorelog', state.choreLog);
+        }
+        if (Array.isArray(data.skills)){ state.skills = mergeById(state.skills, data.skills); await safeSet('meta:skills', state.skills); }
+        if (Array.isArray(data.practiceLog)){ state.practiceLog = mergeById(state.practiceLog, data.practiceLog); await safeSet('meta:practicelog', state.practiceLog); }
+        if (Array.isArray(data.reviews)){ state.reviews = mergeById(state.reviews, data.reviews); await safeSet('meta:reviews', state.reviews); }
+        if (data.brain && data.brain.bandit && !Object.keys(state.brain.bandit).length){ state.brain = Object.assign(defaultBrain(), data.brain); await saveBrain(); }
         if (typeof data.bonusXp === 'number' && data.bonusXp > (state.meta.bonusXp || 0)){ state.meta.bonusXp = data.bonusXp; }
         await saveMeta();
         render();
@@ -2273,6 +3426,8 @@
   /* ---------------- boot ---------------- */
   (async function boot(){
     await loadAll();
+    await loadDayRecs();
+    trainBrain();
     rememberLevel();
     render();
     updateBackupLabel();

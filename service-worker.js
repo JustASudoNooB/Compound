@@ -1,7 +1,8 @@
-const CACHE_NAME = 'compound-v5';
+const CACHE_NAME = 'compound-v6';
 const SHELL = [
   './',
   './index.html',
+  './library.js',
   './manifest.json',
   './caveat.woff2',
   './icon-192.png',

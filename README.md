@@ -9,6 +9,9 @@ Works offline and installs on iPhone, iPad and desktop. Your data stays on your 
 ## What's inside
 
 - **Today**: plan the day, tick tasks off, earn XP, close out the day
+- **Calendar**: recurring chores (daily, chosen days, or N times a week or month) and a month view where each day turns green (85%+), yellow (50 to 85%) or red (under 50%)
+- **Learn**: level-by-level plans for Japanese, ML / Python, quant finance and fitness, a daily practice pick that adapts to what you actually do, and spaced reviews
+- **Coach**: on-device learning that spots your patterns and flags tasks likely to slip, plus optional Claude planning and chat with your own Anthropic API key (stored only on your device)
 - **Board**: sticky-note promises, peeled off when kept
 - **Goals**: deadlines on a live departures board, with steps and status
 - **Growth**: your compound balance chart and level
