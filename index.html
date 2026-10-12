@@ -435,6 +435,13 @@
   .msg-tasks .chip{ height:auto; min-height:32px; padding:5px 11px; text-align:left; white-space:normal; }
   .msg-fb{ margin-top:4px; text-align:right; }
   .msg-fb .fb{ height:24px; font-size:11px; }
+  .manual-box{ border:1px dashed var(--rule-strong); border-radius:var(--radius); background:var(--sheet); padding:10px 12px; margin-top:8px; }
+  .manual-step{ font-size:13px; margin:2px 0 6px; }
+  .manual-step a{ color:var(--teal); font-weight:600; }
+  .manual-prompt summary{ font-size:12px; color:var(--ink-soft); cursor:pointer; margin-bottom:6px; }
+  .manual-prompt textarea{ min-height:110px; font-family:var(--font-mono); font-size:11.5px; margin-top:0; }
+  .modal{ max-height:calc(100vh - 40px); max-height:calc(100dvh - 40px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .modal p.ai-note{ font-size:12px; border-left:3px solid var(--brass); padding:6px 9px; background:var(--sheet-2); }
 </style>
 </head>
 <body>
@@ -463,7 +470,7 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6 · 12 Oct</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.1 · 12 Oct</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
       &nbsp;·&nbsp;
@@ -635,7 +642,7 @@
     try{
       var days = await window.storage.list('day:', false);
       var logs = await window.storage.list('log:', false);
-      var keys = ['meta:goals','meta:app','stats:daily-summary','meta:events','meta:notes','meta:chores','meta:chorelog','meta:skills','meta:practicelog','meta:reviews','meta:brain','meta:aichat'];
+      var keys = ['meta:goals','meta:app','stats:daily-summary','meta:events','meta:notes','meta:chores','meta:chorelog','meta:skills','meta:practicelog','meta:reviews','meta:brain','meta:aichat','meta:manual'];
       if(days && days.keys) keys = keys.concat(days.keys);
       if(logs && logs.keys) keys = keys.concat(logs.keys);
       for (var i=0;i<keys.length;i++){
@@ -802,7 +809,8 @@
     growthRange: 30,
     chores: [], choreLog: {}, skills: [], practiceLog: [], reviews: [], brain: defaultBrain(), dayRecs: {}, chat: [],
     calMonth: null, calSel: null, choreFormOpen: null, learnOpen: null,
-    aiPlanOpen: false, aiBusy: false, aiError: null, aiFixFor: null, chatBusy: false
+    aiPlanOpen: false, aiBusy: false, aiError: null, aiFixFor: null, chatBusy: false,
+    manual: null, aiPlanDraft: null, aiFixDraft: ''
   };
   function freshState(){
     return { activeTab:'today', goals:{longTerm:[],shortTerm:[]}, events:[], summary:[],
@@ -813,7 +821,8 @@
       boardFilter:'all', noteColor:'orange', growthRange:30,
       chores:[], choreLog:{}, skills:[], practiceLog:[], reviews:[], brain: defaultBrain(), dayRecs:{}, chat:[],
       calMonth:null, calSel:null, choreFormOpen:null, learnOpen:null,
-      aiPlanOpen:false, aiBusy:false, aiError:null, aiFixFor:null, chatBusy:false };
+      aiPlanOpen:false, aiBusy:false, aiError:null, aiFixFor:null, chatBusy:false,
+      manual:null, aiPlanDraft:null, aiFixDraft:'' };
   }
 
   function summaryIndex(date){
@@ -859,6 +868,13 @@
     state.reviews = await safeGet('meta:reviews', []);
     state.brain = Object.assign(defaultBrain(), await safeGet('meta:brain', {}));
     state.chat = await safeGet('meta:aichat', []);
+    // a copy-and-paste step in progress survives the app being reloaded while you were in the chat app
+    state.manual = await safeGet('meta:manual', null);
+    if (state.manual && state.manual.prompt){
+      state.activeTab = 'learn';
+      if (state.manual.kind === 'plan'){ state.aiPlanOpen = true; state.aiPlanDraft = state.manual.inputs; }
+      if (state.manual.kind === 'fix'){ state.aiFixFor = state.manual.skillId; state.learnOpen = state.manual.skillId; state.aiFixDraft = state.manual.fix; }
+    } else state.manual = null;
     state.goals.longTerm = state.goals.longTerm || [];
     state.goals.shortTerm = state.goals.shortTerm || [];
     state.today = todayStr();
@@ -2202,8 +2218,7 @@
         '<button class="link-btn" data-act="skill-pause" data-id="'+s.id+'">'+(s.active === false ? 'resume' : 'pause')+'</button>' +
         '<button class="link-btn" data-act="skill-del" data-id="'+s.id+'">remove</button>' +
       '</div>' +
-      (state.aiFixFor === s.id ? '<div class="inline-form" style="margin-top:10px;"><span class="field-label">What should change?</span><textarea class="reflect" id="aiFixText" style="margin-top:0;" placeholder="e.g. I already know hiragana, I only have 30 minutes on weekdays, focus more on speaking"></textarea>' +
-        '<div style="display:flex;gap:8px;margin-top:8px;"><button class="btn small" data-act="ai-fix-go" data-id="'+s.id+'">'+(state.aiBusy ? 'Working…' : 'Re-plan with AI')+'</button><button class="btn ghost small" data-act="ai-fix-cancel">Cancel</button></div></div>' : '') +
+      aiFixFormHtml(s) +
     '</div>';
   }
 
@@ -2258,38 +2273,120 @@
   }
 
   /* ================================================================
-     CLAUDE (optional, your own API key)
+     AI (optional). Three ways to use it:
+       - Gemini with a free Google AI Studio key (no card)
+       - Claude with your own Anthropic key (paid per use)
+       - no key: copy a prompt into Claude.ai, ChatGPT or the Gemini app,
+         then paste the reply back
+     Keys stay on this device and are never exported.
      ================================================================ */
-  var AI_MODELS = [ { id:'claude-haiku-5-5', label:'Haiku 5.5 · fast, cheapest' }, { id:'claude-sonnet-5-5', label:'Sonnet 5.5 · smarter plans' } ];
-  function aiConf(){ try{ return JSON.parse(window.localStorage.getItem('compoundAI') || '{}') || {}; }catch(e){ return {}; } }
-  function aiSaveConf(c){ try{ window.localStorage.setItem('compoundAI', JSON.stringify(c)); }catch(e){} }
-  async function callClaude(system, messages, maxTokens){
-    var c = aiConf();
-    if (!c.key) throw new Error('Add your Anthropic API key first (AI settings).');
-    if (navigator.onLine === false) throw new Error('You are offline. AI features need internet.');
-    var res;
-    try{
-      res = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST',
-        headers:{ 'content-type':'application/json', 'x-api-key': c.key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-        body: JSON.stringify({ model: c.model || 'claude-haiku-5-5', max_tokens: maxTokens || 1500, system: system, messages: messages })
-      });
-    }catch(e){ throw new Error('Could not reach Anthropic. Check your connection.'); }
-    var data = null; try{ data = await res.json(); }catch(e){}
-    if (!res.ok){
-      if (res.status === 401) throw new Error('The API key was rejected. Check it in AI settings.');
-      if (res.status === 429) throw new Error('Rate limited by Anthropic. Wait a minute and try again.');
-      throw new Error((data && data.error && data.error.message) || ('Anthropic returned an error ('+res.status+').'));
-    }
-    return ((data && data.content) || []).filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.text; }).join('\n');
+  var AI_PROVIDERS = {
+    gemini: { name:'Gemini', label:'Gemini · free', defModel:'gemini-flash-latest', keyHint:'AIza…', company:'Google' },
+    anthropic: { name:'Claude', label:'Claude · paid', defModel:'claude-haiku-5-5', keyHint:'sk-ant-…', company:'Anthropic' }
+  };
+  var CLAUDE_MODELS = [ { id:'claude-haiku-5-5', label:'Haiku 5.5 · fast, cheapest' }, { id:'claude-sonnet-5-5', label:'Sonnet 5.5 · smarter plans' } ];
+  var GEMINI_MODELS = [ { id:'gemini-flash-latest', label:'Gemini Flash (latest)' }, { id:'gemini-flash-lite-latest', label:'Gemini Flash-Lite (latest) · lighter' } ];
+  var CHAT_APPS = [ { name:'Claude', url:'https://claude.ai/new' }, { name:'ChatGPT', url:'https://chatgpt.com/' }, { name:'Gemini', url:'https://gemini.google.com/app' } ];
+
+  function aiConf(){
+    var c = {};
+    try{ c = JSON.parse(window.localStorage.getItem('compoundAI') || '{}') || {}; }catch(e){}
+    if (c.key && !c.anthropic) c = { provider:'anthropic', anthropic:{ key:c.key, model:c.model } };   // v6 format
+    c.gemini = c.gemini || {}; c.anthropic = c.anthropic || {};
+    if (!AI_PROVIDERS[c.provider]) c.provider = (c.anthropic.key && !c.gemini.key) ? 'anthropic' : 'gemini';
+    return c;
   }
+  function aiSaveConf(c){ try{ window.localStorage.setItem('compoundAI', JSON.stringify(c)); }catch(e){} }
+  function aiActive(){
+    var c = aiConf(), p = c[c.provider] || {};
+    return p.key ? { provider:c.provider, key:p.key, model: p.model || AI_PROVIDERS[c.provider].defModel } : null;
+  }
+
+  async function aiFetch(url, init, who){
+    var res;
+    try{ res = await fetch(url, init); }catch(e){ throw new Error('Could not reach '+who+'. Check your connection.'); }
+    var data = null; try{ data = await res.json(); }catch(e){}
+    return { res: res, data: data };
+  }
+  async function callAI(system, messages, opts){
+    opts = opts || {};
+    var a = aiActive();
+    if (!a) throw new Error('No AI key on this device. Use copy and paste, or add a free Gemini key in AI settings.');
+    if (navigator.onLine === false) throw new Error('You are offline. AI features need internet.');
+    return a.provider === 'gemini' ? callGemini(a, system, messages, opts, false) : callClaude(a, system, messages, opts);
+  }
+  async function callClaude(a, system, messages, opts){
+    var r = await aiFetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{ 'content-type':'application/json', 'x-api-key': a.key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+      body: JSON.stringify({ model: a.model, max_tokens: opts.maxTokens || 1500, system: system, messages: messages })
+    }, 'Anthropic');
+    if (!r.res.ok){
+      if (r.res.status === 401) throw new Error('The API key was rejected. Check it in AI settings.');
+      if (r.res.status === 429) throw new Error('Rate limited by Anthropic. Wait a minute and try again.');
+      throw new Error((r.data && r.data.error && r.data.error.message) || ('Anthropic returned an error ('+r.res.status+').'));
+    }
+    return ((r.data && r.data.content) || []).filter(function(b){ return b.type === 'text'; }).map(function(b){ return b.text; }).join('\n');
+  }
+  function geminiError(r){
+    var msg = (r.data && r.data.error && r.data.error.message) || '', st = r.res.status;
+    if (/api[ _]?key/i.test(msg) || st === 401) return new Error('Google rejected the key. Copy it again from aistudio.google.com (Get API key).');
+    if (st === 429) return new Error('Free Gemini limit reached for now. Wait a minute, or try tomorrow if today’s limit is used up. Copy and paste still works.');
+    if (st === 404){ var e = new Error('That Gemini model is not available to this key. Pick another in AI settings.'); e.notFound = true; return e; }
+    return new Error(msg || ('Google returned an error ('+st+').'));
+  }
+  async function geminiModels(key){
+    var r = await aiFetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers:{ 'x-goog-api-key': key } }, 'Google');
+    if (!r.res.ok) throw geminiError(r);
+    return ((r.data && r.data.models) || []).filter(function(m){
+      return (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0 && /gemini/i.test(m.name || '') &&
+        !/(tts|image|audio|live|embed|robotics|vision|learnlm|computer|veo|imagen)/i.test(m.name || '');
+    }).map(function(m){ var id = String(m.name).replace(/^models\//, ''); return { id: id, label: m.displayName ? m.displayName+' ('+id+')' : id }; });
+  }
+  function geminiBody(system, messages, opts){
+    var body = {
+      systemInstruction: { parts:[{ text: system }] },
+      contents: messages.map(function(m){ return { role: m.role === 'assistant' ? 'model' : 'user', parts:[{ text: m.content }] }; }),
+      generationConfig: { maxOutputTokens: 8192, temperature: 0.6 }
+    };
+    if (opts.json) body.generationConfig.responseMimeType = 'application/json';
+    return body;
+  }
+  async function callGemini(a, system, messages, opts, retried){
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(a.model)+':generateContent';
+    var r = await aiFetch(url, { method:'POST', headers:{ 'content-type':'application/json', 'x-goog-api-key': a.key }, body: JSON.stringify(geminiBody(system, messages, opts)) }, 'Google');
+    if (!r.res.ok){
+      var err = geminiError(r);
+      if (err.notFound && !retried){
+        // model names change over time: pick a current Flash model for this key and remember it
+        var list = await geminiModels(a.key);
+        var pick = list.find(function(m){ return /flash/i.test(m.id) && !/(lite|preview|exp)/i.test(m.id); }) || list.find(function(m){ return /flash/i.test(m.id); }) || list[0];
+        if (pick && pick.id !== a.model){
+          var c = aiConf(); c.gemini.model = pick.id; c.gemini.models = list; aiSaveConf(c);
+          return callGemini({ provider:'gemini', key:a.key, model:pick.id }, system, messages, opts, true);
+        }
+      }
+      throw err;
+    }
+    var cand = r.data && r.data.candidates && r.data.candidates[0];
+    if (!cand){
+      var br = r.data && r.data.promptFeedback && r.data.promptFeedback.blockReason;
+      throw new Error(br ? 'Gemini declined this request ('+br+').' : 'Gemini sent an empty reply. Try again.');
+    }
+    var text = ((cand.content && cand.content.parts) || []).filter(function(p){ return !p.thought && typeof p.text === 'string'; }).map(function(p){ return p.text; }).join('');
+    if (!text) throw new Error(cand.finishReason === 'MAX_TOKENS' ? 'Gemini ran out of room before answering. Try again or pick another model.' : 'Gemini sent an empty reply ('+(cand.finishReason || 'no reason given')+'). Try again.');
+    return text;
+  }
+
+  /* ---- shared plan helpers ---- */
   function extractJson(text){
     var t = String(text || '').trim();
     var m = t.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (m) t = m[1];
+    if (m && m[1].indexOf('{') >= 0) t = m[1];
     var a = t.indexOf('{'), z = t.lastIndexOf('}');
-    if (a < 0 || z < 0) throw new Error('The AI reply had no plan in it. Try again.');
-    return JSON.parse(t.slice(a, z+1));
+    if (a < 0 || z < 0) throw new Error('No plan found in that reply. Copy the whole answer, including the part in braces { }.');
+    try{ return JSON.parse(t.slice(a, z+1)); }
+    catch(e){ throw new Error('The plan in that reply is cut off or malformed. Ask the chat to resend it as one JSON block.'); }
   }
   function cleanStr(v, n){ return String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, n || 200); }
   function normalizePlan(p){
@@ -2320,7 +2417,7 @@
     'Reply with JSON only, no prose before or after, in exactly this shape: ' +
     '{"name":string,"summary":string,"start_level":integer,"levels":[{"name":string,"goal":string,"weeks":integer,"milestones":[string],"practices":[{"type":string,"kind":"new"|"review"|"skill","minutes":integer,"text":string}],"resources":[{"title":string,"kind":string}]}],"weekly_schedule":[{"day":string,"focus":string,"minutes":integer}],"tips":[string]}. ' +
     'Rules: 3 to 6 levels in order from beginner to the target. Each level has 3 to 5 milestones that can be checked off objectively. Each level has 3 to 5 practices; type is one or two lowercase words (for example handwriting, listening, flashcards, drills, project, mock interview); each practice fits in one sitting and its minutes do not exceed the learner\'s daily minutes; kind is new for learning new material (the app schedules spaced reviews of it), review for revisiting, skill for applied practice. ' +
-    'Prefer active practice (recall, writing by hand, speaking, building) over passive reading. Resources: 2 to 5 real, widely known books, courses, apps or sites, given by their exact title; never invent resources and never include URLs. start_level is the index of the level that matches the learner now. weekly_schedule covers 7 days and respects their time budget. If the learner corrects a previous plan, accept the correction and change the plan accordingly.';
+    'Prefer active practice (recall, writing by hand, speaking, building) over passive reading. Resources: 2 to 5 real, widely known books, courses, apps or sites, given by their exact title; never invent resources and never include URLs. start_level is the index of the level that matches the learner now (0 is the first level). weekly_schedule covers 7 days and respects their time budget. If the learner corrects a previous plan, accept the correction and change the plan accordingly.';
   function planInputsFromForm(){
     return {
       skill: cleanStr(document.getElementById('aiSkill').value, 60),
@@ -2331,19 +2428,22 @@
       notes: cleanStr(document.getElementById('aiNotes').value, 400)
     };
   }
+  function planUserText(inp){ return 'Plan this for me as JSON:\n'+JSON.stringify(inp); }
+  function createAiSkill(plan, inp, raw){
+    state.skills.push({ id: uid(), libId: null, name: plan.name || inp.skill, icon: (plan.name || inp.skill || '?').charAt(0).toUpperCase(), summary: plan.summary, source:'ai',
+      levels: plan.levels, level: plan.start, milestones: {}, schedule: plan.schedule, tips: plan.tips, aiInputs: inp, aiPlanRaw: String(raw || '').slice(0, 12000), createdAt: new Date().toISOString(), active: true });
+    safeSet('meta:skills', state.skills);
+    state.learnOpen = state.skills[state.skills.length-1].id;
+    state.aiPlanOpen = false; state.aiPlanDraft = null;
+    toast('Plan ready: '+(plan.name || inp.skill));
+  }
   async function aiPlanNew(){
     var inp = planInputsFromForm();
     if (!inp.skill){ toast('Name the skill first'); return; }
-    state.aiBusy = true; state.aiError = null; render();
+    state.aiPlanDraft = inp; state.aiBusy = true; state.aiError = null; render();
     try{
-      var txt = await callClaude(PLAN_SYSTEM, [{ role:'user', content: 'Plan this for me as JSON:\n'+JSON.stringify(inp) }], 3000);
-      var plan = normalizePlan(extractJson(txt));
-      state.skills.push({ id: uid(), libId: null, name: plan.name || inp.skill, icon: (inp.skill || '?').charAt(0).toUpperCase(), summary: plan.summary, source:'ai',
-        levels: plan.levels, level: plan.start, milestones: {}, schedule: plan.schedule, tips: plan.tips, aiInputs: inp, aiPlanRaw: txt.slice(0, 12000), createdAt: new Date().toISOString(), active: true });
-      safeSet('meta:skills', state.skills);
-      state.learnOpen = state.skills[state.skills.length-1].id;
-      state.aiPlanOpen = false;
-      toast('Plan ready: '+(plan.name || inp.skill));
+      var txt = await callAI(PLAN_SYSTEM, [{ role:'user', content: planUserText(inp) }], { maxTokens:3000, json:true });
+      createAiSkill(normalizePlan(extractJson(txt)), inp, txt);
     }catch(e){ state.aiError = e.message; }
     state.aiBusy = false; render();
   }
@@ -2354,43 +2454,136 @@
     });
     return out;
   }
+  function fixMessages(s, fix){
+    var current = { name: s.name, summary: s.summary, start_level: s.level, levels: s.levels, weekly_schedule: s.schedule || [], tips: s.tips || [] };
+    return [
+      { role:'user', content: 'Here is my current plan as JSON:\n'+JSON.stringify(current) },
+      { role:'assistant', content: 'Understood. What should change?' },
+      { role:'user', content: 'Correction: '+fix+'\nMy practice in the last 4 weeks by type (done/skipped/marked wrong): '+JSON.stringify(practiceStatsFor(s))+
+        '\nMilestones I have ticked at my current level: '+JSON.stringify(skillMilestones(s))+'\nReturn the full revised plan as JSON in the same shape.' }
+    ];
+  }
+  function applyFix(s, plan, raw){
+    s.levels = plan.levels; s.level = plan.start; s.summary = plan.summary || s.summary; s.schedule = plan.schedule; s.tips = plan.tips;
+    s.milestones = {}; s.source = 'ai'; s.aiPlanRaw = String(raw || '').slice(0, 12000);
+    if (state.brain.picks.bySkill) delete state.brain.picks.bySkill[s.id];
+    safeSet('meta:skills', state.skills); saveBrain();
+    state.aiFixFor = null; state.aiFixDraft = '';
+    toast('Plan updated');
+  }
   async function aiFixPlan(skillId){
     var s = state.skills.find(function(x){ return x.id === skillId; }); if (!s) return;
     var fix = cleanStr((document.getElementById('aiFixText') || {}).value, 600);
     if (!fix){ toast('Write what should change'); return; }
-    state.aiBusy = true; state.aiError = null; render();
+    state.aiFixDraft = fix; state.aiBusy = true; state.aiError = null; render();
     try{
-      var current = { name: s.name, summary: s.summary, start_level: s.level, levels: s.levels, weekly_schedule: s.schedule || [], tips: s.tips || [] };
-      var msgs = [
-        { role:'user', content: 'Here is my current plan as JSON:\n'+JSON.stringify(current) },
-        { role:'assistant', content: 'Understood. What should change?' },
-        { role:'user', content: 'Correction: '+fix+'\nMy practice in the last 4 weeks by type (done/skipped/marked wrong): '+JSON.stringify(practiceStatsFor(s))+
-          '\nMilestones I have ticked at my current level: '+JSON.stringify(skillMilestones(s))+'\nReturn the full revised plan as JSON in the same shape.' }
-      ];
-      var txt = await callClaude(PLAN_SYSTEM, msgs, 3000);
-      var plan = normalizePlan(extractJson(txt));
-      s.levels = plan.levels; s.level = plan.start; s.summary = plan.summary || s.summary; s.schedule = plan.schedule; s.tips = plan.tips;
-      s.milestones = {}; s.source = 'ai'; s.aiPlanRaw = txt.slice(0, 12000);
-      if (state.brain.picks.bySkill) delete state.brain.picks.bySkill[s.id];
-      safeSet('meta:skills', state.skills); saveBrain();
-      state.aiFixFor = null;
-      toast('Plan updated');
+      var txt = await callAI(PLAN_SYSTEM, fixMessages(s, fix), { maxTokens:3000, json:true });
+      applyFix(s, normalizePlan(extractJson(txt)), txt);
     }catch(e){ state.aiError = e.message; toast(e.message); }
     state.aiBusy = false; render();
   }
-  function renderAiPlanForm(conf){
+
+  /* ---- copy and paste mode (no key, works with any chat app) ---- */
+  async function copyText(text){
+    try{ if (navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(text); return true; } }catch(e){}
+    try{
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '0'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+      var ok = document.execCommand && document.execCommand('copy');
+      document.body.removeChild(ta);
+      return !!ok;
+    }catch(e){ return false; }
+  }
+  function flattenPrompt(system, messages){
+    var parts = ['INSTRUCTIONS FOR YOU:\n'+system];
+    messages.forEach(function(m){ parts.push((m.role === 'assistant' ? 'YOU SAID:\n' : 'ME:\n') + m.content); });
+    return parts.join('\n\n---\n\n');
+  }
+  async function startManual(m){
+    m.copied = await copyText(m.prompt);
+    state.manual = m; state.aiError = null; safeSet('meta:manual', m);
+    render();
+    toast(m.copied ? 'Prompt copied. Paste it into a chat app.' : 'Could not copy automatically. Open “Show the prompt” and copy it.');
+  }
+  function clearManual(){ state.manual = null; safeSet('meta:manual', null); }
+  function manualBoxHtml(label){
+    var m = state.manual;
+    return '<div class="manual-box">' +
+      '<div class="manual-step"><b>1.</b> '+(m.copied ? 'Prompt copied. ' : '')+'Paste it into a chat app (free): ' +
+        CHAT_APPS.map(function(a){ return '<a href="'+a.url+'" target="_blank" rel="noopener">'+a.name+'</a>'; }).join(' · ') +
+        ' · <button class="link-btn" data-act="manual-recopy">copy again</button></div>' +
+      '<details class="manual-prompt"'+(m.copied ? '' : ' open')+'><summary>Show the prompt</summary><textarea class="reflect" readonly>'+escapeHtml(m.prompt)+'</textarea></details>' +
+      '<div class="manual-step"><b>2.</b> Copy the whole reply and paste it here:</div>' +
+      '<textarea class="reflect" id="manualReply" style="margin-top:4px;" placeholder="Paste the reply"></textarea>' +
+      (state.aiError ? '<p class="section-sub" style="color:var(--brick);margin:6px 0 0;">'+escapeHtml(state.aiError)+'</p>' : '') +
+      '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;"><button class="btn small" data-act="manual-import">'+label+'</button>' +
+        '<button class="btn ghost small" data-act="manual-cancel">Cancel</button></div>' +
+    '</div>';
+  }
+  function manualImport(){
+    var m = state.manual; if (!m) return;
+    var txt = String((document.getElementById('manualReply') || {}).value || '').trim();
+    if (!txt){ toast('Paste the reply first'); return; }
+    state.aiError = null;
+    try{
+      if (m.kind === 'plan'){ createAiSkill(normalizePlan(extractJson(txt)), m.inputs, txt); }
+      else if (m.kind === 'fix'){
+        var s = state.skills.find(function(x){ return x.id === m.skillId; });
+        if (!s) throw new Error('That skill no longer exists.');
+        applyFix(s, normalizePlan(extractJson(txt)), txt);
+      } else if (m.kind === 'chat'){
+        state.chat.push({ role:'assistant', content: txt.slice(0, 6000), at: new Date().toISOString(), manual: true });
+        state.chat = state.chat.slice(-40);
+        safeSet('meta:aichat', state.chat);
+      }
+      state.manual = null; safeSet('meta:manual', null);
+    }catch(e){ state.aiError = e.message; }
+    render();
+    if (m.kind === 'chat' && !state.manual){ var log = document.getElementById('chatLog'); if (log) log.scrollTop = log.scrollHeight; }
+  }
+
+  function renderAiPlanForm(){
+    var live = aiActive();
     if (!state.aiPlanOpen) return '<button class="coach-btn" data-act="ai-plan-open" style="margin-top:4px;">&#10022; Plan any skill with AI</button>';
+    if (state.manual && state.manual.kind === 'plan'){
+      var i = state.manual.inputs;
+      return '<div class="inline-form ai-form" style="margin-top:6px;"><p class="section-sub" style="margin:0 0 10px;"><b>'+escapeHtml(i.skill)+'</b>' +
+        (i.current_level ? ' · now: '+escapeHtml(i.current_level) : '') + (i.target ? ' · target: '+escapeHtml(i.target) : '') + ' · '+i.minutes_per_day+' min a day</p>' +
+        manualBoxHtml('Import plan') + '</div>';
+    }
+    var d = state.aiPlanDraft || {};
+    var v = function(k){ return d[k] != null ? escapeHtml(String(d[k])) : ''; };
     return '<div class="inline-form ai-form" style="margin-top:6px;">' +
-      (conf.key ? '' : '<p class="section-sub" style="margin:0 0 10px;color:var(--brick);">Add your API key in <button class="link-btn" data-act="ai-settings">AI settings</button> first.</p>') +
-      '<div class="field-row"><div><span class="field-label">Skill</span><input type="text" id="aiSkill" maxlength="60" placeholder="e.g. Spanish, guitar, public speaking, SQL"></div></div>' +
-      '<div class="field-row"><div><span class="field-label">Where you are now</span><input type="text" id="aiNow" maxlength="200" placeholder="e.g. complete beginner, know basic chords"></div></div>' +
-      '<div class="field-row"><div><span class="field-label">Target</span><input type="text" id="aiTarget" maxlength="200" placeholder="e.g. hold a 10 minute conversation, play 5 songs"></div></div>' +
-      '<div class="field-row"><div><span class="field-label">Minutes a day</span><input type="number" id="aiMins" min="5" max="300" value="30"></div>' +
-        '<div><span class="field-label">By (optional)</span><input type="date" id="aiBy"></div></div>' +
-      '<div class="field-row"><div><span class="field-label">Anything else</span><input type="text" id="aiNotes" maxlength="400" placeholder="e.g. I learn best by doing, weekends are free"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Skill</span><input type="text" id="aiSkill" maxlength="60" value="'+v('skill')+'" placeholder="e.g. Spanish, guitar, public speaking, SQL"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Where you are now</span><input type="text" id="aiNow" maxlength="200" value="'+v('current_level')+'" placeholder="e.g. complete beginner, know basic chords"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Target</span><input type="text" id="aiTarget" maxlength="200" value="'+v('target')+'" placeholder="e.g. hold a 10 minute conversation, play 5 songs"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Minutes a day</span><input type="number" id="aiMins" min="5" max="300" value="'+(d.minutes_per_day || 30)+'"></div>' +
+        '<div><span class="field-label">By (optional)</span><input type="date" id="aiBy" value="'+v('deadline')+'"></div></div>' +
+      '<div class="field-row"><div><span class="field-label">Anything else</span><input type="text" id="aiNotes" maxlength="400" value="'+v('notes')+'" placeholder="e.g. I learn best by doing, weekends are free"></div></div>' +
       (state.aiError ? '<p class="section-sub" style="color:var(--brick);margin:0 0 8px;">'+escapeHtml(state.aiError)+'</p>' : '') +
-      '<div style="display:flex;gap:8px;"><button class="btn small" data-act="ai-plan-go"'+(state.aiBusy ? ' disabled' : '')+'>'+(state.aiBusy ? 'Planning… (10 to 30 s)' : 'Make my plan')+'</button>' +
-      '<button class="btn ghost small" data-act="ai-plan-close">Cancel</button></div></div>';
+      (live ?
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn small" data-act="ai-plan-go"'+(state.aiBusy ? ' disabled' : '')+'>'+(state.aiBusy ? 'Planning… (10 to 30 s)' : 'Make my plan')+'</button>' +
+          '<button class="btn ghost small" data-act="ai-plan-copy">Copy prompt instead</button><button class="btn ghost small" data-act="ai-plan-close">Cancel</button></div>' +
+          '<p class="section-sub" style="margin:8px 0 0;">Uses '+AI_PROVIDERS[live.provider].label+' from <button class="link-btn" data-act="ai-settings">AI settings</button>.</p>' :
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn small" data-act="ai-plan-copy">Copy prompt</button><button class="btn ghost small" data-act="ai-plan-close">Cancel</button></div>' +
+          '<p class="section-sub" style="margin:8px 0 0;">Free: paste the prompt into Claude, ChatGPT or Gemini, then paste the reply back. For one-tap plans, add a free Gemini key in <button class="link-btn" data-act="ai-settings">AI settings</button>.</p>') +
+    '</div>';
+  }
+  function aiFixFormHtml(s){
+    if (state.aiFixFor !== s.id) return '';
+    if (state.manual && state.manual.kind === 'fix' && state.manual.skillId === s.id){
+      return '<div class="inline-form" style="margin-top:10px;"><p class="section-sub" style="margin:0 0 8px;">Change: '+escapeHtml(state.manual.fix)+'</p>'+manualBoxHtml('Update plan')+'</div>';
+    }
+    var live = aiActive();
+    return '<div class="inline-form" style="margin-top:10px;"><span class="field-label">What should change?</span>' +
+      '<textarea class="reflect" id="aiFixText" style="margin-top:0;" placeholder="e.g. I already know hiragana, I only have 30 minutes on weekdays, focus more on speaking">'+escapeHtml(state.aiFixDraft || '')+'</textarea>' +
+      (state.aiError ? '<p class="section-sub" style="color:var(--brick);margin:6px 0 0;">'+escapeHtml(state.aiError)+'</p>' : '') +
+      '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">' +
+        (live ? '<button class="btn small" data-act="ai-fix-go" data-id="'+s.id+'"'+(state.aiBusy ? ' disabled' : '')+'>'+(state.aiBusy ? 'Working…' : 'Re-plan with '+AI_PROVIDERS[live.provider].name)+'</button>' +
+                '<button class="btn ghost small" data-act="ai-fix-copy" data-id="'+s.id+'">Copy prompt instead</button>' :
+                '<button class="btn small" data-act="ai-fix-copy" data-id="'+s.id+'">Copy prompt</button>') +
+        '<button class="btn ghost small" data-act="ai-fix-cancel">Cancel</button></div></div>';
   }
 
   // ---- coach chat ----
@@ -2420,12 +2613,14 @@
     'If you are not sure, say so. If the user says you got something wrong, accept it plainly and adjust. ' +
     'When you suggest concrete tasks for today, end your reply with a fenced block exactly like:\n```tasks\n[{"text":"task text","size":"quick|standard|big"}]\n``` with at most 5 tasks.';
   function parseTasksBlock(text){
-    var m = String(text || '').match(/```tasks\s*([\s\S]*?)```/);
+    text = String(text || '');
+    var m = text.match(/```\s*tasks\s*([\s\S]*?)```/) || text.match(/(?:^|\n)\s*tasks\s*\n(\[[\s\S]*?\])/);
     if (!m) return { text: text, tasks: [] };
     var tasks = [];
-    try{ tasks = JSON.parse(m[1]).slice(0, 5).map(function(t){ return { text: cleanStr(t.text, 140), weight: t.size === 'quick' ? 1 : t.size === 'big' ? 3 : 2 }; }).filter(function(t){ return t.text; }); }catch(e){}
+    try{ tasks = JSON.parse(m[1].trim()).slice(0, 5).map(function(t){ return { text: cleanStr(t.text, 140), weight: t.size === 'quick' ? 1 : t.size === 'big' ? 3 : 2 }; }).filter(function(t){ return t.text; }); }catch(e){}
     return { text: text.replace(m[0], '').trim(), tasks: tasks };
   }
+  function coachUserText(msg){ return 'My data right now:\n'+JSON.stringify(coachContext())+'\n\n'+msg; }
   async function coachSend(msg){
     msg = cleanStr(msg, 800);
     if (!msg) return;
@@ -2434,8 +2629,8 @@
     try{
       var history = state.chat.filter(function(m){ return !m.error; }).slice(-12).map(function(m){ return { role: m.role, content: m.content }; });
       while (history.length && history[0].role !== 'user') history.shift();
-      history[history.length-1] = { role:'user', content: 'My data right now:\n'+JSON.stringify(coachContext())+'\n\n'+msg };
-      var txt = await callClaude(COACH_SYSTEM, history, 900);
+      history[history.length-1] = { role:'user', content: coachUserText(msg) };
+      var txt = await callAI(COACH_SYSTEM, history, { maxTokens:900 });
       state.chat.push({ role:'assistant', content: txt, at: new Date().toISOString() });
     }catch(e){
       state.chat.push({ role:'assistant', content: 'Error: '+e.message, at: new Date().toISOString(), error: true });
@@ -2445,11 +2640,16 @@
     state.chatBusy = false; render();
     var log = document.getElementById('chatLog'); if (log) log.scrollTop = log.scrollHeight;
   }
-  function renderCoachChat(conf){
-    if (!conf.key){
-      return '<div class="coach-box"><p class="section-sub" style="margin:0 0 10px;">Ask the coach to plan your day, explain why you keep missing things, or adjust a skill plan. It uses Claude with your own Anthropic API key, which stays on this device.</p>' +
-        '<button class="btn small" data-act="ai-settings">Set up AI</button></div>';
-    }
+  function coachCopy(msg){
+    msg = cleanStr(msg, 800);
+    if (!msg){ toast('Type a question first'); return; }
+    state.chat.push({ role:'user', content: msg, at: new Date().toISOString(), manual: true });
+    state.chat = state.chat.slice(-40);
+    safeSet('meta:aichat', state.chat);
+    startManual({ kind:'chat', prompt: flattenPrompt(COACH_SYSTEM, [{ role:'user', content: coachUserText(msg) }]) });
+  }
+  function renderCoachChat(){
+    var live = aiActive();
     var msgs = state.chat.slice(-12).map(function(m, i){
       if (m.role === 'user') return '<div class="msg me">'+escapeHtml(m.content)+'</div>';
       var parsed = parseTasksBlock(m.content);
@@ -2461,39 +2661,76 @@
       return '<div class="msg ai'+(m.error ? ' err' : '')+'">'+escapeHtml(parsed.text).replace(/\n/g, '<br>')+add+
         (m.error ? '' : '<div class="msg-fb"><button class="fb" data-act="chat-wrong" data-m="'+idx+'">that&#39;s wrong</button></div>')+'</div>';
     }).join('');
+    var waiting = state.manual && state.manual.kind === 'chat';
     var quick = ['Plan my day from my goals and skills', 'Why do I keep missing tasks?', 'What should I focus on this week?', 'Review my Japanese plan'];
     return '<div class="coach-box">' +
-      (msgs ? '<div class="chat-log" id="chatLog">'+msgs+(state.chatBusy ? '<div class="msg ai">Thinking…</div>' : '')+'</div>' : '') +
-      '<div class="chip-row" style="flex-wrap:wrap;margin:8px 0;">'+quick.map(function(q){ return '<button class="chip" data-act="chat-quick" data-q="'+escapeHtml(q)+'">'+escapeHtml(q)+'</button>'; }).join('')+'</div>' +
-      '<div style="display:flex;gap:8px;"><input type="text" id="chatInput" maxlength="800" placeholder="Ask your coach…" style="flex:1;min-width:0;">' +
-      '<button class="btn" data-act="chat-send"'+(state.chatBusy ? ' disabled' : '')+'>Send</button></div>' +
-      '<p class="section-sub" style="margin:8px 0 0;">Sends a summary of your data to Anthropic only when you press Send. ' +
+      (live ? '' : '<p class="section-sub" style="margin:0 0 10px;">Ask the coach to plan your day, explain why you keep missing things, or adjust a skill plan. Free with no setup: your question is copied together with your data, you paste it into Claude, ChatGPT or Gemini, then paste the answer back here. ' +
+        'For one-tap answers, add a free Gemini key in <button class="link-btn" data-act="ai-settings">AI settings</button>.</p>') +
+      (msgs || state.chatBusy ? '<div class="chat-log" id="chatLog">'+msgs+(state.chatBusy ? '<div class="msg ai">Thinking…</div>' : '')+'</div>' : '') +
+      (waiting ? manualBoxHtml('Add reply') :
+        '<div class="chip-row" style="flex-wrap:wrap;margin:8px 0;">'+quick.map(function(q){ return '<button class="chip" data-act="chat-quick" data-q="'+escapeHtml(q)+'">'+escapeHtml(q)+'</button>'; }).join('')+'</div>' +
+        '<div style="display:flex;gap:8px;"><input type="text" id="chatInput" maxlength="800" placeholder="Ask your coach…" style="flex:1;min-width:0;">' +
+        (live ? '<button class="btn" data-act="chat-send"'+(state.chatBusy ? ' disabled' : '')+'>Send</button>' : '<button class="btn" data-act="chat-copy">Copy</button>') + '</div>') +
+      '<p class="section-sub" style="margin:8px 0 0;">' +
+        (live ? 'Sends a summary of your data to '+AI_PROVIDERS[live.provider].company+' only when you press Send ('+AI_PROVIDERS[live.provider].label+'). ' : 'Nothing leaves this device until you paste it somewhere. ') +
         '<button class="link-btn" data-act="ai-settings">AI settings</button> · <button class="link-btn" data-act="chat-clear">clear chat</button></p>' +
     '</div>';
   }
+
   function openAiSettings(){
     var modalRoot = document.getElementById('modalRoot');
     var c = aiConf();
-    modalRoot.innerHTML = '<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-label="AI settings">' +
-      '<h3>AI settings</h3>' +
-      '<p>Compound calls Claude directly from this device with your own Anthropic API key. Create one at console.anthropic.com → API keys. The key is stored only on this device and is never included in exports.</p>' +
-      '<div class="field-row"><div><span class="field-label">API key</span><input type="password" id="aiKey" autocomplete="off" placeholder="sk-ant-…" value="'+escapeHtml(c.key || '')+'"></div></div>' +
-      '<div class="field-row"><div><span class="field-label">Model</span><select id="aiModel">'+AI_MODELS.map(function(m){ return '<option value="'+m.id+'"'+((c.model || 'claude-haiku-5-5') === m.id ? ' selected' : '')+'>'+m.label+'</option>'; }).join('')+'</select></div></div>' +
-      '<p id="aiTestMsg" style="min-height:18px;"></p>' +
-      '<div class="row-btns">' + (c.key ? '<button class="btn ghost small" id="aiRemove">Remove key</button>' : '') +
-        '<button class="btn ghost small" id="aiTest">Test</button><button class="btn small" id="aiSaveBtn">Save</button></div>' +
-    '</div></div>';
-    function readForm(){ return { key: (document.getElementById('aiKey').value || '').trim(), model: document.getElementById('aiModel').value }; }
-    document.getElementById('aiSaveBtn').onclick = function(){ aiSaveConf(readForm()); modalRoot.innerHTML = ''; render(); toast('AI settings saved'); };
-    document.getElementById('aiTest').onclick = async function(){
-      var out = document.getElementById('aiTestMsg');
-      aiSaveConf(readForm()); out.textContent = 'Testing…';
-      try{ var t = await callClaude('Reply with the single word OK.', [{ role:'user', content:'Test' }], 10); out.textContent = 'Connected. Claude replied: '+t.slice(0, 40); }
-      catch(e){ out.textContent = e.message; }
-    };
-    var rm = document.getElementById('aiRemove');
-    if (rm) rm.onclick = function(){ aiSaveConf({}); modalRoot.innerHTML = ''; render(); toast('Key removed from this device'); };
-    document.getElementById('modalBg').addEventListener('click', function(e){ if (e.target.id === 'modalBg') modalRoot.innerHTML = ''; });
+    var sel = c.provider;
+    function stash(){
+      var k = document.getElementById('aiKey'), m = document.getElementById('aiModel');
+      if (k) c[sel].key = (k.value || '').trim();
+      if (m) c[sel].model = m.value;
+    }
+    function modelOptions(){
+      var cur = c[sel].model || AI_PROVIDERS[sel].defModel;
+      var list = sel === 'anthropic' ? CLAUDE_MODELS : (c.gemini.models && c.gemini.models.length ? c.gemini.models : GEMINI_MODELS);
+      if (!list.some(function(m){ return m.id === cur; })) list = [{ id: cur, label: cur }].concat(list);
+      return list.map(function(m){ return '<option value="'+escapeHtml(m.id)+'"'+(m.id === cur ? ' selected' : '')+'>'+escapeHtml(m.label)+'</option>'; }).join('');
+    }
+    function draw(msg){
+      var help = sel === 'gemini' ?
+        '<p>Free, no card. Open <b>aistudio.google.com</b>, sign in with Google, tap <b>Get API key</b> → <b>Create API key</b>, and paste it here. Free use has daily limits; if you hit one, wait or use copy and paste.</p>' +
+        '<p class="ai-note">On Google’s free tier, what you send can be used to improve Google’s products and may be read by reviewers. Compound sends summaries of your tasks, chores, goals and skills, so keep private details out of those.</p>' :
+        '<p>Uses your own Anthropic key from <b>console.anthropic.com</b> → API keys. This is billed per use on your API account; a Claude.ai subscription does not cover it.</p>';
+      modalRoot.innerHTML = '<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-label="AI settings">' +
+        '<h3>AI settings</h3>' +
+        '<p>Everything else in Compound runs on this device for free. With no key, the plan and chat buttons copy a prompt you paste into Claude, ChatGPT or Gemini, then you paste the answer back.</p>' +
+        '<div class="seg" role="group" aria-label="AI engine" style="margin-bottom:12px;">' +
+          ['gemini','anthropic'].map(function(p){ return '<button data-p="'+p+'" class="'+(p === sel ? 'on' : '')+'" aria-pressed="'+(p === sel)+'">'+AI_PROVIDERS[p].label+'</button>'; }).join('') + '</div>' +
+        help +
+        '<div class="field-row"><div><span class="field-label">'+AI_PROVIDERS[sel].name+' API key</span><input type="password" id="aiKey" autocomplete="off" placeholder="'+AI_PROVIDERS[sel].keyHint+'" value="'+escapeHtml(c[sel].key || '')+'"></div></div>' +
+        '<div class="field-row"><div><span class="field-label">Model</span><select id="aiModel">'+modelOptions()+'</select></div></div>' +
+        '<p id="aiTestMsg" style="min-height:18px;margin-bottom:12px;">'+escapeHtml(msg || '')+'</p>' +
+        '<div class="row-btns">' + (c[sel].key ? '<button class="btn ghost small" id="aiRemove">Remove key</button>' : '') +
+          '<button class="btn ghost small" id="aiTest">Test</button><button class="btn small" id="aiSaveBtn">Save</button></div>' +
+      '</div></div>';
+      modalRoot.querySelectorAll('[data-p]').forEach(function(b){ b.onclick = function(){ stash(); sel = b.dataset.p; draw(); }; });
+      document.getElementById('aiSaveBtn').onclick = function(){ stash(); c.provider = sel; aiSaveConf(c); modalRoot.innerHTML = ''; render(); toast(c[sel].key ? AI_PROVIDERS[sel].name+' is ready' : 'Saved. Copy and paste mode stays on until you add a key.'); };
+      document.getElementById('aiTest').onclick = async function(){
+        stash(); c.provider = sel;
+        if (!c[sel].key){ document.getElementById('aiTestMsg').textContent = 'Paste a key first.'; return; }
+        aiSaveConf(c);
+        document.getElementById('aiTestMsg').textContent = 'Testing…';
+        try{
+          if (sel === 'gemini'){
+            var list = await geminiModels(c.gemini.key);
+            if (list.length){ c.gemini.models = list; aiSaveConf(c); }
+          }
+          var t = await callAI('Reply with the single word OK.', [{ role:'user', content:'Test' }], { maxTokens:10 });
+          c = aiConf();
+          draw('Connected. '+AI_PROVIDERS[sel].name+' replied: '+cleanStr(t, 40)+' (model '+(c[sel].model || AI_PROVIDERS[sel].defModel)+')');
+        }catch(e){ c = aiConf(); draw(e.message); }
+      };
+      var rm = document.getElementById('aiRemove');
+      if (rm) rm.onclick = function(){ c[sel] = {}; aiSaveConf(c); draw('Key removed from this device.'); render(); };
+      document.getElementById('modalBg').addEventListener('click', function(e){ if (e.target.id === 'modalBg') modalRoot.innerHTML = ''; });
+    }
+    draw();
   }
 
   /* ---------------- Today additions ---------------- */
@@ -2569,13 +2806,37 @@
     }
     else if (a === 'ai-settings'){ openAiSettings(); }
     else if (a === 'ai-plan-open'){ state.aiPlanOpen = true; state.aiError = null; render(); }
-    else if (a === 'ai-plan-close'){ state.aiPlanOpen = false; render(); }
+    else if (a === 'ai-plan-close'){ state.aiPlanOpen = false; state.aiPlanDraft = null; if (state.manual && state.manual.kind === 'plan') clearManual(); render(); }
     else if (a === 'ai-plan-go'){ if (!state.aiBusy) aiPlanNew(); }
-    else if (a === 'ai-fix'){ if (!aiConf().key){ openAiSettings(); return; } state.aiFixFor = id; render(); var ft = document.getElementById('aiFixText'); if (ft) ft.focus(); }
-    else if (a === 'ai-fix-cancel'){ state.aiFixFor = null; render(); }
+    else if (a === 'ai-plan-copy'){
+      var pin = planInputsFromForm();
+      if (!pin.skill){ toast('Name the skill first'); return; }
+      state.aiPlanDraft = pin;
+      startManual({ kind:'plan', inputs: pin, prompt: flattenPrompt(PLAN_SYSTEM, [{ role:'user', content: planUserText(pin) }]) });
+    }
+    else if (a === 'ai-fix'){ state.aiFixFor = id; state.aiError = null; render(); var ft = document.getElementById('aiFixText'); if (ft) ft.focus(); }
+    else if (a === 'ai-fix-cancel'){ state.aiFixFor = null; state.aiFixDraft = ''; if (state.manual && state.manual.kind === 'fix') clearManual(); render(); }
     else if (a === 'ai-fix-go'){ if (!state.aiBusy) aiFixPlan(id); }
+    else if (a === 'ai-fix-copy'){
+      var sk = state.skills.find(function(x){ return x.id === id; });
+      var fx = cleanStr((document.getElementById('aiFixText') || {}).value, 600);
+      if (!sk) return;
+      if (!fx){ toast('Write what should change'); return; }
+      state.aiFixDraft = fx;
+      startManual({ kind:'fix', skillId: id, fix: fx, prompt: flattenPrompt(PLAN_SYSTEM, fixMessages(sk, fx)) });
+    }
+    else if (a === 'manual-import'){ manualImport(); }
+    else if (a === 'manual-recopy'){ if (state.manual) copyText(state.manual.prompt).then(function(ok){ toast(ok ? 'Copied again' : 'Could not copy. Open “Show the prompt” and copy it.'); }); }
+    else if (a === 'manual-cancel'){
+      if (state.manual && state.manual.kind === 'chat'){
+        var last = state.chat[state.chat.length-1];
+        if (last && last.role === 'user' && last.manual){ state.chat.pop(); safeSet('meta:aichat', state.chat); }
+      }
+      clearManual(); state.aiError = null; render();
+    }
     else if (a === 'chat-send'){ var inp = document.getElementById('chatInput'); if (inp && !state.chatBusy) coachSend(inp.value); }
-    else if (a === 'chat-quick'){ if (!state.chatBusy) coachSend(el.dataset.q); }
+    else if (a === 'chat-copy'){ var inp3 = document.getElementById('chatInput'); if (inp3) coachCopy(inp3.value); }
+    else if (a === 'chat-quick'){ if (!aiActive()) coachCopy(el.dataset.q); else if (!state.chatBusy) coachSend(el.dataset.q); }
     else if (a === 'chat-clear'){ state.chat = []; safeSet('meta:aichat', state.chat); render(); }
     else if (a === 'chat-wrong'){
       var inp2 = document.getElementById('chatInput');
@@ -2611,7 +2872,7 @@
   });
   root.addEventListener('keydown', function(e){
     if (e.key !== 'Enter') return;
-    if (e.target.id === 'chatInput' && !state.chatBusy){ e.preventDefault(); coachSend(e.target.value); }
+    if (e.target.id === 'chatInput' && !state.chatBusy){ e.preventDefault(); if (aiActive()) coachSend(e.target.value); else coachCopy(e.target.value); }
   });
 
 
