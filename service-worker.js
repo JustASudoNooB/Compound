@@ -1,4 +1,4 @@
-const CACHE_NAME = 'compound-v6-1';
+const CACHE_NAME = 'compound-v6-2';
 const SHELL = [
   './',
   './index.html',

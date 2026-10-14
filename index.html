@@ -441,6 +441,9 @@
   .manual-prompt summary{ font-size:12px; color:var(--ink-soft); cursor:pointer; margin-bottom:6px; }
   .manual-prompt textarea{ min-height:110px; font-family:var(--font-mono); font-size:11.5px; margin-top:0; }
   .modal{ max-height:calc(100vh - 40px); max-height:calc(100dvh - 40px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .bk-list{ border-top:1px solid var(--rule); }
+  .bk-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--rule); font-size:13px; }
+  .bk-row small{ display:block; color:var(--ink-soft); font-size:11.5px; margin-top:2px; }
   .modal p.ai-note{ font-size:12px; border-left:3px solid var(--brass); padding:6px 9px; background:var(--sheet-2); }
 </style>
 </head>
@@ -470,9 +473,11 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.1 · 12 Oct</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.2 · 14 Oct</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
+      &nbsp;·&nbsp;
+      <button id="backupsBtn">backups</button>
       &nbsp;·&nbsp;
       <button id="exportBtn">export data</button> <span id="backupLabel" style="color:var(--ink-faint);"></span>
       &nbsp;·&nbsp;
@@ -626,7 +631,12 @@
     try{
       var res = await window.storage.get(key, false);
       if(!res || res.value == null) return fallback;
-      return JSON.parse(res.value);
+      try{ return JSON.parse(res.value); }
+      catch(parseErr){
+        // keep the unreadable original aside so a later save cannot destroy it
+        try{ window.localStorage.setItem('compound-corrupt:'+key+':'+Date.now(), res.value); }catch(e2){}
+        return fallback;
+      }
     }catch(e){ return fallback; }
   }
   async function safeSet(key, value){
@@ -3589,7 +3599,8 @@
   document.getElementById('voiceBtn').onclick = openVoiceSettings;
 
   document.getElementById('resetBtn').onclick = function(){
-    showConfirm('Reset everything?', 'This permanently deletes every goal, countdown, chore, skill, board note, log entry, and logged day. Your AI key stays until you remove it in AI settings. There is no undo.', async function(){
+    showConfirm('Reset everything?', 'This permanently deletes every goal, countdown, chore, skill, board note, log entry, and logged day. A full backup is saved first, so you can bring it back from backups. Your AI key stays until you remove it in AI settings.', async function(){
+      await takeSnapshot('before reset');
       await deleteAllKeys();
       state = freshState();
       await safeSet('meta:app', state.meta);
@@ -3628,19 +3639,37 @@
     reader.onload = async function(){
       try{
         var data = JSON.parse(reader.result);
-        if (data.goals){ state.goals = data.goals; await saveGoals(); }
-        if (data.events){ state.events = data.events; await saveEvents(); }
+        await takeSnapshot('before import');
+        function byId(have, incoming){
+          var ids = {}; (have || []).forEach(function(x){ if (x && x.id) ids[x.id] = true; });
+          return (have || []).concat((incoming || []).filter(function(x){ return x && x.id && !ids[x.id]; }));
+        }
+        if (data.goals){
+          state.goals.longTerm = byId(state.goals.longTerm, data.goals.longTerm);
+          state.goals.shortTerm = byId(state.goals.shortTerm, data.goals.shortTerm);
+          await saveGoals();
+        }
+        if (Array.isArray(data.events)){ state.events = byId(state.events, data.events); await saveEvents(); }
         if (Array.isArray(data.days)){
-          data.days.forEach(function(entry){ upsertSummary(entry); });
+          data.days.forEach(function(entry){
+            if (!entry || !entry.date) return;
+            var at = summaryIndex(entry.date);
+            // never replace a day already recorded here, unless it is an empty placeholder
+            if (at === -1 || (!state.summary[at].planned && entry.planned)) upsertSummary(entry);
+          });
           await saveSummary();
         }
         if (data.today && data.todayDate){
+          var incomingDay = data.today;
+          (incomingDay.tasks || []).forEach(function(t){ if (t.weight==null) t.weight = 2; });
           if (data.todayDate === state.today){
-            state.day = data.today;
-            if (state.day.tasks) state.day.tasks.forEach(function(t){ if (t.weight==null) t.weight = 2; });
+            state.day.tasks = byId(state.day.tasks, incomingDay.tasks);
+            if (!state.day.reflection && incomingDay.reflection) state.day.reflection = incomingDay.reflection;
             await saveDay();
           } else {
-            await safeSet('day:'+data.todayDate, data.today);
+            var existingDay = await safeGet('day:'+data.todayDate, null);
+            if (existingDay){ existingDay.tasks = byId(existingDay.tasks, incomingDay.tasks); await safeSet('day:'+data.todayDate, existingDay); }
+            else await safeSet('day:'+data.todayDate, incomingDay);
           }
         }
         if (data.log){
@@ -3684,8 +3713,145 @@
     reader.readAsText(file);
   });
 
+  /* ---------------- data safety ----------------
+     Rules every update follows:
+       1. Updates never delete or rewrite saved keys. New features add new keys
+          and fill defaults on load; old fields stay readable.
+       2. Before the first launch of a new version, the whole ledger is copied
+          into an on-device backup (IndexedDB), plus one copy a day.
+       3. A key that cannot be read is set aside, never overwritten blindly.
+       4. Reset and restore take a backup first, so both can be undone. */
+  var APP_VERSION = '6.2';
+  var DATA_VERSION = 2;          // bump only with a migration below
+  var BK_DB = 'compound-backups', BK_STORE = 'snaps', BK_KEEP_DAILY = 14, BK_KEEP_OTHER = 12;
+  var MIGRATIONS = {
+    // 1 -> 2 (v6): chores, skills, reviews and the coach brain are new keys with defaults; nothing to move
+    2: async function(){}
+  };
+  function rawData(){
+    var d = {};
+    try{ for (var i=0;i<window.localStorage.length;i++){ var k = window.localStorage.key(i); if (k && k.indexOf('compound:') === 0) d[k] = window.localStorage.getItem(k); } }catch(e){}
+    return d;
+  }
+  function snapSummary(data){
+    var days = 0, notes = 0, chores = 0, skills = 0, tasks = 0;
+    Object.keys(data).forEach(function(k){
+      try{
+        if (k.indexOf('compound:day:') === 0){ days++; tasks += (JSON.parse(data[k]).tasks || []).length; }
+        else if (k === 'compound:meta:notes') notes = JSON.parse(data[k]).length;
+        else if (k === 'compound:meta:chores') chores = JSON.parse(data[k]).length;
+        else if (k === 'compound:meta:skills') skills = JSON.parse(data[k]).length;
+      }catch(e){}
+    });
+    return days+' days · '+tasks+' tasks · '+chores+' chores · '+skills+' skills · '+notes+' notes';
+  }
+  function bkOpen(){
+    return new Promise(function(resolve, reject){
+      if (!window.indexedDB){ reject(new Error('IndexedDB unavailable')); return; }
+      var r = window.indexedDB.open(BK_DB, 1);
+      r.onupgradeneeded = function(){ if (!r.result.objectStoreNames.contains(BK_STORE)) r.result.createObjectStore(BK_STORE, { keyPath:'id' }); };
+      r.onsuccess = function(){ resolve(r.result); };
+      r.onerror = function(){ reject(r.error || new Error('IndexedDB open failed')); };
+    });
+  }
+  async function bkRun(mode, fn){
+    var db = await bkOpen();
+    return new Promise(function(resolve, reject){
+      var tx = db.transaction(BK_STORE, mode), req = fn(tx.objectStore(BK_STORE));
+      tx.oncomplete = function(){ db.close(); resolve(req ? req.result : undefined); };
+      tx.onerror = tx.onabort = function(){ db.close(); reject(tx.error || new Error('backup failed')); };
+    });
+  }
+  function lsSnapshot(){ try{ var s = JSON.parse(window.localStorage.getItem('compound-backup:last') || 'null'); return s && s.data ? s : null; }catch(e){ return null; } }
+  async function listSnapshots(){
+    var all = [];
+    try{ all = (await bkRun('readonly', function(st){ return st.getAll(); })) || []; }catch(e){}
+    var ls = lsSnapshot(); if (ls && !all.some(function(s){ return s.id === ls.id; })) all.push(ls);
+    return all.sort(function(a, b){ return a.at < b.at ? 1 : -1; });
+  }
+  async function pruneSnapshots(){
+    var all = await listSnapshots(), daily = 0, other = 0, drop = [];
+    all.forEach(function(s){
+      if (s.reason === 'daily'){ if (++daily > BK_KEEP_DAILY) drop.push(s.id); }
+      else if (++other > BK_KEEP_OTHER) drop.push(s.id);
+    });
+    if (drop.length) await bkRun('readwrite', function(st){ drop.forEach(function(id){ st.delete(id); }); return null; });
+  }
+  async function takeSnapshot(reason){
+    var data = rawData();
+    if (!Object.keys(data).length) return null;
+    var snap = { id: new Date().toISOString()+'|'+reason, at: new Date().toISOString(), reason: reason, app: APP_VERSION, data: data };
+    try{
+      await bkRun('readwrite', function(st){ st.put(snap); return null; });
+      try{ await pruneSnapshots(); }catch(e){}
+    }catch(e){
+      // no IndexedDB: keep the most recent safety copy in local storage if it fits
+      try{ window.localStorage.setItem('compound-backup:last', JSON.stringify(snap)); }catch(e2){ return null; }
+    }
+    return snap;
+  }
+  async function restoreSnapshot(id){
+    var all = await listSnapshots();
+    var snap = all.find(function(s){ return s.id === id; });
+    if (!snap) throw new Error('That backup is gone.');
+    await takeSnapshot('before restore');
+    Object.keys(rawData()).forEach(function(k){ window.localStorage.removeItem(k); });
+    Object.keys(snap.data).forEach(function(k){ window.localStorage.setItem(k, snap.data[k]); });
+    return snap;
+  }
+  async function guardUpgrade(){
+    var hasData = Object.keys(rawData()).length > 0;
+    var v = null;
+    try{ v = JSON.parse(window.localStorage.getItem('compound:meta:version') || 'null'); }catch(e){}
+    if (hasData && (!v || v.app !== APP_VERSION)){
+      await takeSnapshot('before update to v'+APP_VERSION+(v && v.app ? ' (from v'+v.app+')' : ''));
+    }
+    var from = (v && v.data) || 1;
+    for (var n = from + 1; n <= DATA_VERSION; n++){ if (MIGRATIONS[n]) await MIGRATIONS[n](); }
+    var today = todayStr();
+    var last = null; try{ last = window.localStorage.getItem('compound-lastsnap'); }catch(e){}
+    if (hasData && last !== today){ if (await takeSnapshot('daily')){ try{ window.localStorage.setItem('compound-lastsnap', today); }catch(e){} } }
+    try{ window.localStorage.setItem('compound:meta:version', JSON.stringify({ app: APP_VERSION, data: Math.max(from, DATA_VERSION), updatedAt: new Date().toISOString() })); }catch(e){}
+    // ask the browser not to evict this site's storage under pressure
+    try{ if (navigator.storage && navigator.storage.persist) state.persisted = await navigator.storage.persist(); }catch(e){}
+  }
+
+  function openBackups(){
+    var modalRoot = document.getElementById('modalRoot');
+    modalRoot.innerHTML = '<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-label="Backups"><h3>Backups</h3><p>Loading…</p></div></div>';
+    listSnapshots().then(function(all){
+      var rows = all.length ? all.map(function(s){
+        return '<div class="bk-row"><div><b>'+escapeHtml(new Date(s.at).toLocaleString(undefined, { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }))+'</b> · '+escapeHtml(s.reason)+
+          '<small>'+escapeHtml(snapSummary(s.data))+' · saved by v'+escapeHtml(s.app || '?')+'</small></div>' +
+          '<button class="btn ghost small" data-bk="'+escapeHtml(s.id)+'">Restore</button></div>';
+      }).join('') : '<p>No backups yet. One is made the next time the app opens with data in it.</p>';
+      modalRoot.innerHTML = '<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-label="Backups">' +
+        '<h3>Backups</h3>' +
+        '<p>Updates never delete your data. Before every update, and once a day, Compound saves a full copy here on this device. Restoring one makes a copy of the current state first, so it can be undone.</p>' +
+        '<p class="ai-note">These copies live on this device only. Deleting the home-screen app or clearing website data removes them too, so download an export file now and then. '+
+          (state.persisted === true ? 'This browser has agreed to keep Compound’s storage.' : state.persisted === false ? 'This browser may clear storage when space runs low, so exports matter more here.' : '')+'</p>' +
+        '<div class="bk-list">'+rows+'</div>' +
+        '<div class="row-btns" style="margin-top:14px;"><button class="btn ghost small" id="bkNow">Back up now</button><button class="btn small" id="bkDone">Done</button></div>' +
+      '</div></div>';
+      document.getElementById('bkDone').onclick = function(){ modalRoot.innerHTML = ''; };
+      document.getElementById('bkNow').onclick = async function(){ await takeSnapshot('manual'); openBackups(); toast('Backup saved on this device'); };
+      document.getElementById('modalBg').addEventListener('click', function(e){ if (e.target.id === 'modalBg') modalRoot.innerHTML = ''; });
+      modalRoot.querySelectorAll('[data-bk]').forEach(function(b){
+        b.onclick = function(){
+          var id = b.dataset.bk;
+          showConfirm('Restore this backup?', 'Your current data is backed up first, then replaced with this copy. The app reloads after.', async function(){
+            try{ await restoreSnapshot(id); toast('Restored. Reloading…'); setTimeout(function(){ try{ window.location.reload(); }catch(e){} }, 400); }
+            catch(e){ toast(e.message); }
+          });
+        };
+      });
+    });
+  }
+  document.getElementById('backupsBtn').onclick = openBackups;
+
   /* ---------------- boot ---------------- */
   (async function boot(){
+    try{ await guardUpgrade(); }catch(e){}
     await loadAll();
     await loadDayRecs();
     trainBrain();

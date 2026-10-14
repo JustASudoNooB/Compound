@@ -1,0 +1,12 @@
+{
+  "name": "compound",
+  "private": true,
+  "description": "A daily ledger of promises made and kept. Offline PWA.",
+  "scripts": {
+    "test": "node tests/app.test.js && node tests/v6.test.js && node tests/free.test.js && node tests/upgrade.test.js"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0",
+    "jsdom": "^29.1.1"
+  }
+}
