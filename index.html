@@ -358,6 +358,15 @@
   .cal-cell.future{ background:var(--sheet-2); color:var(--ink-faint); }
   .cal-cell.today{ box-shadow:inset 0 0 0 2px var(--ink); }
   .cal-cell.sel{ outline:2px solid var(--brass); outline-offset:1px; }
+  .cal-cell{ position:relative; }
+  .cal-log{ position:absolute; top:2px; right:4px; font-size:10px; line-height:1; color:var(--brass-ink); font-weight:700; }
+  .cal-logs{ margin-top:12px; padding-top:10px; border-top:1px dashed var(--rule-strong); }
+  .cal-logs-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
+  .cal-log-item{ display:block; width:100%; text-align:left; border:1px solid var(--rule); border-left:3px solid var(--brass); border-radius:var(--radius); background:var(--sheet); padding:7px 10px; margin-bottom:6px; font-size:13px; color:var(--ink); cursor:pointer; font-family:inherit; }
+  .cal-log-item:hover{ border-color:var(--ink); border-left-color:var(--brass); }
+  .cal-log-time{ font-family:var(--font-mono); font-size:10.5px; color:var(--ink-soft); margin-right:8px; }
+  .log-day{ border-radius:var(--radius); transition:background .6s ease, box-shadow .6s ease; }
+  .log-focus{ background:var(--brass-light); box-shadow:0 0 0 6px var(--brass-light); }
   .cal-dot{ display:inline-block; width:4px; height:4px; border-radius:50%; background:var(--ink-faint); }
   .cal-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; font-size:12px; color:var(--ink-soft); margin:12px 0 16px; }
   .cal-legend i{ display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
@@ -473,7 +482,7 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.2 · 14 Oct</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.3 · 16 Oct</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
       &nbsp;·&nbsp;
@@ -893,6 +902,7 @@
     await backfill();
     await discoverLogYears();
     await loadLogYear(new Date().getFullYear());
+    for (var ly = 0; ly < state.logYearsAvailable.length; ly++) await loadLogYear(state.logYearsAvailable[ly]);
   }
 
   async function backfill(){
@@ -1829,7 +1839,25 @@
     }).join('');
   }
 
+  function calLogHtml(ds, entries){
+    if (!entries.length) return '';
+    var list = entries.slice().sort(function(a, b){ return a.createdAt < b.createdAt ? -1 : 1; });
+    return '<div class="cal-logs"><div class="cal-logs-head"><span class="field-label" style="margin:0;">&#9998; Log · '+list.length+(list.length === 1 ? ' entry' : ' entries')+'</span>' +
+      '<button class="link-btn" data-act="goto-log" data-d="'+ds+'">open in Log &#8594;</button></div>' +
+      list.slice(0, 3).map(function(e){
+        var t = e.text.length > 140 ? e.text.slice(0, 140).replace(/\s+\S*$/, '')+'…' : e.text;
+        return '<button class="cal-log-item" data-act="goto-log" data-d="'+ds+'"><span class="cal-log-time">'+new Date(e.createdAt).toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' })+'</span>'+escapeHtml(t)+'</button>';
+      }).join('') +
+      (list.length > 3 ? '<button class="link-btn" data-act="goto-log" data-d="'+ds+'">+ '+(list.length-3)+' more</button>' : '') +
+    '</div>';
+  }
+  function logsByDate(){
+    var m = {};
+    state.logYearsLoaded.forEach(function(y){ (state.logYears[y] || []).forEach(function(e){ (m[e.dateFor] = m[e.dateFor] || []).push(e); }); });
+    return m;
+  }
   function renderCalendar(){
+    var logMap = logsByDate();
     var stats = computeStats();
     var smap = summaryMap(stats);
     var ym = state.calMonth || state.today.slice(0,7);
@@ -1847,7 +1875,9 @@
       var cls = future ? '' : scoreClass(sc.pct);
       if (ds < state.today && sc.pct != null){ cnt++; sum += sc.pct; if (cls === 'g') g++; else if (cls === 'y') y++; else r++; }
       var sub = future ? (sc.chores.length ? '<span class="cal-dot"></span>' : '') : (sc.pct != null ? Math.round(sc.pct*100)+'%' : '');
-      cells += '<button class="cal-cell '+cls+(ds === state.today ? ' today' : '')+(ds === state.calSel ? ' sel' : '')+(future ? ' future' : '')+'" data-act="cal-day" data-d="'+ds+'" aria-label="'+prettyDate(ds)+(sc.pct != null && !future ? ', '+Math.round(sc.pct*100)+' percent' : '')+'">' +
+      var nLog = (logMap[ds] || []).length;
+      cells += '<button class="cal-cell '+cls+(ds === state.today ? ' today' : '')+(ds === state.calSel ? ' sel' : '')+(future ? ' future' : '')+(nLog ? ' logged' : '')+'" data-act="cal-day" data-d="'+ds+'" aria-label="'+prettyDate(ds)+(sc.pct != null && !future ? ', '+Math.round(sc.pct*100)+' percent' : '')+(nLog ? ', '+nLog+' log '+(nLog === 1 ? 'entry' : 'entries') : '')+'">' +
+        (nLog ? '<span class="cal-log" aria-hidden="true">&#9998;'+(nLog > 1 ? nLog : '')+'</span>' : '') +
         '<span class="cal-num">'+(k+1)+'</span><span class="cal-sub">'+sub+'</span></button>';
     }
     var sel = state.calSel || state.today;
@@ -1862,6 +1892,7 @@
       choresHtml +
       '<p class="section-sub" style="margin:10px 0 0;">'+tasksLine+(sel === state.today ? ' · <button class="link-btn" data-act="goto" data-tab="today">open Today</button>' : '')+'</p>' +
       (sel < addDays(state.today, -1) ? '<p class="section-sub" style="margin:4px 0 0;">Days older than yesterday are locked.</p>' : '') +
+      calLogHtml(sel, logMap[sel] || []) +
     '</div>';
 
     var active = (state.chores || []).filter(function(c){ return !c.archivedAt && (!c.end || c.end >= state.today); });
@@ -1890,7 +1921,7 @@
         '<button class="cal-nav" data-act="cal-next" aria-label="Next month">&#8250;</button></div>' +
       '<div class="cal-grid cal-wd">'+['M','T','W','T','F','S','S'].map(function(d){ return '<span>'+d+'</span>'; }).join('')+'</div>' +
       '<div class="cal-grid">'+cells+'</div>' +
-      '<div class="cal-legend"><span><i class="g"></i>85%+ · '+g+'</span><span><i class="y"></i>50–85% · '+y+'</span><span><i class="r"></i>under 50% · '+r+'</span>' +
+      '<div class="cal-legend"><span><i class="g"></i>85%+ · '+g+'</span><span><i class="y"></i>50–85% · '+y+'</span><span><i class="r"></i>under 50% · '+r+'</span><span>&#9998; logged</span>' +
         (cnt ? '<span style="margin-left:auto;font-family:var(--font-mono);">avg '+Math.round(sum/cnt*100)+'% · past days</span>' : '') + '</div>' +
       detail +
       '<div class="goal-group" style="margin-top:22px;">' +
@@ -2784,6 +2815,13 @@
       var ym = state.calMonth || state.today.slice(0,7);
       state.calMonth = addMonths(ym+'-01', a === 'cal-prev' ? -1 : 1).slice(0,7); render();
     }
+    else if (a === 'log-to-cal'){ var cd = el.dataset.d; state.calMonth = cd.slice(0,7); state.calSel = cd; state.activeTab = 'calendar'; render(); window.scrollTo(0, 0); }
+    else if (a === 'goto-log'){
+      var ld = el.dataset.d;
+      state.activeTab = 'log'; state.logFocus = ld; render();
+      var grp = document.getElementById('log-day-'+ld);
+      if (grp){ grp.scrollIntoView({ behavior:'smooth', block:'start' }); setTimeout(function(){ state.logFocus = null; grp.classList.remove('log-focus'); }, 2600); }
+    }
     else if (a === 'goto'){ state.activeTab = el.dataset.tab; render(); window.scrollTo(0, 0); }
     else if (a === 'chore-tick'){ toggleChore(id, el.dataset.d, el); }
     else if (a === 'chore-new'){ state.choreFormOpen = 'new'; render(); var t = document.getElementById('chTitle'); if (t) t.focus(); }
@@ -2932,8 +2970,8 @@
     var dates = Object.keys(byDate).sort().reverse();
     var groupsHtml = dates.map(function(d){
       var entries = byDate[d].slice().sort(function(a,b){ return b.createdAt < a.createdAt ? -1:1; });
-      return '<div style="margin-bottom:18px;">' +
-        '<div class="log-date-head">'+prettyDate(d)+'</div>' +
+      return '<div style="margin-bottom:18px;" id="log-day-'+d+'" class="log-day'+(state.logFocus === d ? ' log-focus' : '')+'">' +
+        '<div class="log-date-head">'+prettyDate(d)+' <button class="link-btn" style="margin-left:6px;text-transform:none;letter-spacing:0;" data-act="log-to-cal" data-d="'+d+'">see on calendar</button></div>' +
         entries.map(logRowHtml).join('') +
       '</div>';
     }).join('');
@@ -3721,7 +3759,7 @@
           into an on-device backup (IndexedDB), plus one copy a day.
        3. A key that cannot be read is set aside, never overwritten blindly.
        4. Reset and restore take a backup first, so both can be undone. */
-  var APP_VERSION = '6.2';
+  var APP_VERSION = '6.3';
   var DATA_VERSION = 2;          // bump only with a migration below
   var BK_DB = 'compound-backups', BK_STORE = 'snaps', BK_KEEP_DAILY = 14, BK_KEEP_OTHER = 12;
   var MIGRATIONS = {

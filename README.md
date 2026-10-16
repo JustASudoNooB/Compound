@@ -23,7 +23,7 @@
 | Tab | What you do there |
 |---|---|
 | **Today** | Write the day's tasks, tick them off for XP, close out the day. Shows today's chores, suggested practice and coach notes. |
-| **Calendar** | Set recurring chores (every day, chosen weekdays, or N times a week or month). Each day turns green (85%+), yellow (50 to 85%) or red (under 50%). |
+| **Calendar** | Set recurring chores (every day, chosen weekdays, or N times a week or month). Each day turns green (85%+), yellow (50 to 85%) or red (under 50%). Days with log entries show ✎; tap one to read them or jump to that day in the Log. |
 | **Learn** | Level-by-level plans for Japanese, ML / Python, quant finance and fitness, or any skill you plan with AI. One practice a day per skill, plus spaced reviews. |
 | **Goals** | Long and short-term goals on a departures board, with steps and an on-time or delayed status. |
 | **Board** | Sticky-note promises to people. Peel one off when it's kept. |
