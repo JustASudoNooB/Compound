@@ -56,6 +56,15 @@ Keys stay on your device and are never included in exports or backups. On Google
 **Android:** open the link in Chrome, tap ⋮, then **Install app**.
 **Windows or Mac:** open the link in Chrome, Edge or Brave, then click the install icon in the address bar.
 
+## Sync between devices
+
+Each device keeps its own copy until you turn on **sync** (footer). Sync stores one data file in a private GitHub repo that only you can open, so your laptop, phone and iPad all show the same tasks, log, chores and goals. It is free.
+
+1. On the device that has your data: tap **sync**, create a private repo named `compound-sync`, create a fine-grained token with *Contents: Read and write* on that repo only, paste it, tap **Connect**.
+2. On each other device: tap **sync** and paste the **setup code** shown on the first device.
+
+After that, devices sync when the app opens, a few seconds after each change, and every minute while it is open. If both devices changed the same day, both sets of tasks are kept. A backup is saved before any synced change is applied.
+
 ## Updates and your data
 
 Your data lives only on your device, in the browser's storage for this site. Nothing is uploaded.

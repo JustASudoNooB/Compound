@@ -450,6 +450,9 @@
   .manual-prompt summary{ font-size:12px; color:var(--ink-soft); cursor:pointer; margin-bottom:6px; }
   .manual-prompt textarea{ min-height:110px; font-family:var(--font-mono); font-size:11.5px; margin-top:0; }
   .modal{ max-height:calc(100vh - 40px); max-height:calc(100dvh - 40px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .sync-steps{ margin:0 0 12px; padding-left:20px; font-size:13px; color:var(--ink-soft); }
+  .sync-steps li{ margin-bottom:6px; }
+  .sync-steps a{ color:var(--teal); font-weight:600; }
   .bk-list{ border-top:1px solid var(--rule); }
   .bk-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--rule); font-size:13px; }
   .bk-row small{ display:block; color:var(--ink-soft); font-size:11.5px; margin-top:2px; }
@@ -482,9 +485,11 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.4 · 16 Oct</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.5 · 16 Oct</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
+      &nbsp;·&nbsp;
+      <button id="syncBtn">sync</button> <span id="syncLabel" style="color:var(--ink-faint);"></span>
       &nbsp;·&nbsp;
       <button id="backupsBtn">backups</button>
       &nbsp;·&nbsp;
@@ -512,6 +517,16 @@
   window.storage = (function(){
     var NS = 'compound:';
     function full(key){ return NS + key; }
+    // remember when each key last changed on this device, for sync between devices
+    function touched(key){
+      try{
+        if (key === 'meta:version' || key === 'meta:manual') return;
+        var t = JSON.parse(window.localStorage.getItem('compound-sync-t') || '{}') || {};
+        t[full(key)] = Date.now();
+        window.localStorage.setItem('compound-sync-t', JSON.stringify(t));
+      }catch(e){}
+      if (window.__compoundSyncKick) window.__compoundSyncKick();
+    }
     return {
       get: function(key){
         return new Promise(function(resolve, reject){
@@ -525,7 +540,9 @@
       set: function(key, value){
         return new Promise(function(resolve){
           try{
+            var prev = window.localStorage.getItem(full(key));
             window.localStorage.setItem(full(key), value);
+            if (prev !== value) touched(key);
             resolve({ key: key, value: value, shared: false });
           }catch(e){ resolve(null); }
         });
@@ -535,6 +552,7 @@
           try{
             var existed = window.localStorage.getItem(full(key)) !== null;
             window.localStorage.removeItem(full(key));
+            if (existed) touched(key);
             resolve({ key: key, deleted: existed, shared: false });
           }catch(e){ resolve(null); }
         });
@@ -3759,7 +3777,7 @@
           into an on-device backup (IndexedDB), plus one copy a day.
        3. A key that cannot be read is set aside, never overwritten blindly.
        4. Reset and restore take a backup first, so both can be undone. */
-  var APP_VERSION = '6.4';
+  var APP_VERSION = '6.5';
   var DATA_VERSION = 2;          // bump only with a migration below
   var BK_DB = 'compound-backups', BK_STORE = 'snaps', BK_KEEP_DAILY = 14, BK_KEEP_OTHER = 12;
   var MIGRATIONS = {
@@ -3891,6 +3909,267 @@
   }
   document.getElementById('backupsBtn').onclick = openBackups;
 
+  /* ---------------- sync between devices ----------------
+     Each device keeps its own copy. With sync on, the ledger is also kept in
+     one file (compound-data.json) in a private GitHub repo the user owns.
+     Every device pulls, merges and pushes that file. Merging works key by key:
+     a key changed on one side only is copied over; a key changed on both sides
+     is combined (tasks, log entries, notes, goals, chores... are unioned by id). */
+  var SYNC_FILE = 'compound-data.json';
+  var SYNC_SKIP = { 'compound:meta:version': 1, 'compound:meta:manual': 1 };
+  function syncConf(){ try{ return JSON.parse(window.localStorage.getItem('compoundSync') || 'null'); }catch(e){ return null; } }
+  function syncSaveConf(c){ try{ if (c) window.localStorage.setItem('compoundSync', JSON.stringify(c)); else window.localStorage.removeItem('compoundSync'); }catch(e){} }
+  function syncTimes(){ try{ return JSON.parse(window.localStorage.getItem('compound-sync-t') || '{}') || {}; }catch(e){ return {}; } }
+  function syncBase(){ try{ return JSON.parse(window.localStorage.getItem('compound-sync-base') || '{}') || {}; }catch(e){ return {}; } }
+  function hashStr(s){ var h = 0x811c9dc5; for (var i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = (h + ((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24))) >>> 0; } return h.toString(16)+':'+s.length; }
+  function syncable(k){ return k.indexOf('compound:') === 0 && !SYNC_SKIP[k]; }
+  function b64enc(s){ return btoa(unescape(encodeURIComponent(s))); }
+  function b64dec(s){ return decodeURIComponent(escape(atob(String(s).replace(/\s/g, '')))); }
+
+  async function gh(c, method, path, body, accept){
+    var res;
+    try{
+      res = await fetch('https://api.github.com'+path, { method: method, cache:'no-store',
+        headers: Object.assign({ 'Authorization':'Bearer '+c.token, 'Accept': accept || 'application/vnd.github+json' }, body ? { 'Content-Type':'application/json' } : {}),
+        body: body ? JSON.stringify(body) : undefined });
+    }catch(e){ var ne = new Error('No connection to GitHub. Your data is safe on this device and will sync when you are online.'); ne.offline = true; throw ne; }
+    var text = await res.text(), data = null;
+    if (accept && accept.indexOf('raw') >= 0) data = text; else { try{ data = text ? JSON.parse(text) : null; }catch(e){ data = text; } }
+    return { status: res.status, ok: res.ok, data: data };
+  }
+  function ghError(r, what){
+    if (r.status === 401) return new Error('GitHub rejected the token. Make a new one and paste it in sync settings.');
+    if (r.status === 403) return new Error('The token cannot '+what+'. Give it Contents: Read and write on the compound-sync repo.');
+    if (r.status === 404) return new Error('Repo not found. Create a private repo named compound-sync, or check the token can see it.');
+    return new Error('GitHub error '+r.status+((r.data && r.data.message) ? ': '+r.data.message : ''));
+  }
+  async function syncFetchRemote(c){
+    var r = await gh(c, 'GET', '/repos/'+c.owner+'/'+c.repo+'/contents/'+SYNC_FILE);
+    if (r.status === 404){
+      var repo = await gh(c, 'GET', '/repos/'+c.owner+'/'+c.repo);
+      if (repo.status === 404) throw ghError(repo, 'read the repo');
+      return { sha: null, keys: {} };
+    }
+    if (!r.ok) throw ghError(r, 'read the sync file');
+    var text = (r.data && r.data.content) ? b64dec(r.data.content) : null;
+    if (!text){
+      var raw = await gh(c, 'GET', '/repos/'+c.owner+'/'+c.repo+'/contents/'+SYNC_FILE, null, 'application/vnd.github.raw+json');
+      if (!raw.ok) throw ghError(raw, 'read the sync file');
+      text = raw.data;
+    }
+    var doc = null; try{ doc = JSON.parse(text); }catch(e){}
+    if (!doc || typeof doc.keys !== 'object') throw new Error('The sync file on GitHub is damaged. Nothing was changed on this device.');
+    return { sha: r.data.sha, keys: doc.keys };
+  }
+
+  function unionById(newer, older){
+    var seen = {}, out = [];
+    (newer || []).forEach(function(x){ if (x && x.id != null){ seen[x.id] = 1; } out.push(x); });
+    (older || []).forEach(function(x){ if (!x || x.id == null || !seen[x.id]) out.push(x); });
+    return out;
+  }
+  function mergeValues(k, a, b, ta, tb){
+    // a = this device, b = the other copy; both changed since the last sync
+    var A, B;
+    try{ A = JSON.parse(a); B = JSON.parse(b); }catch(e){ return ta >= tb ? a : b; }
+    var aNewer = ta >= tb, N = aNewer ? A : B, O = aNewer ? B : A, out = N;
+    var idList = function(v){ return Array.isArray(v) && v.length && v.every(function(x){ return x && typeof x === 'object' && x.id != null; }); };
+    if (k === 'compound:stats:daily-summary' && Array.isArray(A) && Array.isArray(B)){
+      var m = {};
+      O.forEach(function(e){ if (e && e.date) m[e.date] = e; });
+      N.forEach(function(e){ if (e && e.date){ var o = m[e.date]; m[e.date] = (o && (o.planned || 0) > (e.planned || 0)) ? o : e; } });
+      out = Object.keys(m).sort().map(function(d){ return m[d]; });
+    } else if (k.indexOf('compound:day:') === 0 && N && O && Array.isArray(N.tasks) && Array.isArray(O.tasks)){
+      out = Object.assign({}, O, N, { tasks: unionById(N.tasks, O.tasks), closedOut: !!(N.closedOut || O.closedOut), reflection: N.reflection || O.reflection || '' });
+    } else if (k === 'compound:meta:goals' && N && O){
+      out = { longTerm: unionById(N.longTerm, O.longTerm), shortTerm: unionById(N.shortTerm, O.shortTerm) };
+    } else if (k === 'compound:meta:chorelog' && N && O && !Array.isArray(N)){
+      out = {};
+      [O, N].forEach(function(src){ Object.keys(src).forEach(function(d){ out[d] = Object.assign(out[d] || {}, src[d]); }); });
+    } else if (k === 'compound:meta:app' && N && O){
+      out = Object.assign({}, O, N, {
+        bonusXp: Math.max(N.bonusXp || 0, O.bonusXp || 0), maxLevel: Math.max(N.maxLevel || 0, O.maxLevel || 0),
+        lastExportAt: [N.lastExportAt, O.lastExportAt].filter(Boolean).sort().pop() || null,
+        lastActiveDate: [N.lastActiveDate, O.lastActiveDate].filter(Boolean).sort().pop() || null });
+    } else if (idList(N) || idList(O)){
+      out = unionById(Array.isArray(N) ? N : [], Array.isArray(O) ? O : []);
+    }
+    return JSON.stringify(out);
+  }
+
+  var syncBusy = false, syncAgain = false, syncTimer = null;
+  function syncStatus(text, err){ state.syncText = text; state.syncErr = !!err; var el = document.getElementById('syncLabel'); if (el){ el.textContent = text; el.style.color = err ? 'var(--brick)' : ''; } }
+  function syncKick(){
+    if (!syncConf()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function(){ syncNow(false); }, 2500);
+  }
+  window.__compoundSyncKick = syncKick;
+  async function syncNow(manual){
+    var c = syncConf();
+    if (!c) return { skipped: true };
+    if (syncBusy){ syncAgain = true; return { queued: true }; }
+    syncBusy = true; syncStatus('syncing…');
+    var changedLocal = false;
+    try{
+      for (var attempt = 0; attempt < 3; attempt++){
+        var remote = await syncFetchRemote(c);
+        var times = syncTimes(), base = syncBase();
+        var local = {};
+        Object.keys(rawData()).forEach(function(k){ if (syncable(k)) local[k] = window.localStorage.getItem(k); });
+        var keys = {};
+        Object.keys(local).concat(Object.keys(remote.keys), Object.keys(base)).forEach(function(k){ if (syncable(k)) keys[k] = 1; });
+        var out = {}, newBase = {}, writes = {}, deletes = [], pushNeeded = !remote.sha;
+        Object.keys(keys).forEach(function(k){
+          var l = local[k], rEnt = remote.keys[k], r = rEnt ? rEnt.v : undefined;
+          var tl = times[k] || 0, tr = rEnt ? (rEnt.t || 0) : 0;
+          var hb = base[k], hl = l != null ? hashStr(l) : null, hr = r != null ? hashStr(r) : null;
+          var lChanged = hl !== (hb || null), rChanged = hr !== (hb || null);
+          var v, t;
+          if (hl === hr){ v = l; t = Math.max(tl, tr); }
+          else if (lChanged && !rChanged){ v = l; t = tl; pushNeeded = true; }
+          else if (rChanged && !lChanged){ v = r; t = tr; }
+          else if (l == null){ v = r; t = tr; }                       // deleted here, edited there: keep the edit
+          else if (r == null){ v = l; t = tl; pushNeeded = true; }
+          else { v = mergeValues(k, l, r, tl, tr); t = Math.max(tl, tr, Date.now()); pushNeeded = true; }
+          if (v == null){ if (l != null) deletes.push(k); if (r != null) pushNeeded = true; return; }
+          if (v !== l) writes[k] = v;
+          if (v !== r) pushNeeded = true;
+          out[k] = { v: v, t: t };
+          newBase[k] = hashStr(v);
+        });
+        if (pushNeeded){
+          var doc = JSON.stringify({ format: 1, app: APP_VERSION, updatedAt: new Date().toISOString(), device: c.device || '', keys: out });
+          var put = await gh(c, 'PUT', '/repos/'+c.owner+'/'+c.repo+'/contents/'+SYNC_FILE,
+            Object.assign({ message: 'Compound sync from '+(c.device || 'a device'), content: b64enc(doc) }, remote.sha ? { sha: remote.sha } : {}));
+          if (put.status === 409 || put.status === 422){ continue; }   // another device wrote first: pull again and merge
+          if (!put.ok) throw ghError(put, 'write the sync file');
+        }
+        // only touch this device once GitHub has the merged copy
+        if (Object.keys(writes).length || deletes.length) await takeSnapshot('before sync');
+        Object.keys(writes).forEach(function(k){ window.localStorage.setItem(k, writes[k]); changedLocal = true; });
+        deletes.forEach(function(k){ window.localStorage.removeItem(k); changedLocal = true; });
+        var nt = {}; Object.keys(out).forEach(function(k){ nt[k] = out[k].t; });
+        window.localStorage.setItem('compound-sync-t', JSON.stringify(nt));
+        window.localStorage.setItem('compound-sync-base', JSON.stringify(newBase));
+        c = syncConf() || c; c.lastSync = new Date().toISOString(); syncSaveConf(c);
+        break;
+      }
+      if (attempt === 3) throw new Error('Another device kept writing at the same moment. Try again in a minute.');
+      syncStatus('synced '+new Date().toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' }));
+      if (changedLocal){
+        state.logYears = {}; state.logYearsLoaded = []; state.historyDayCache = {};
+        await loadAll(); await loadDayRecs(); syncTodaySummary(); render(); updateBackupLabel();
+        if (manual !== 'quiet') toast('Synced: updates from your other device are in');
+      } else if (manual === true) toast('Up to date');
+      return { ok: true, changedLocal: changedLocal };
+    }catch(e){
+      syncStatus(e.offline ? 'sync waiting for internet' : 'sync error', !e.offline);
+      state.syncError = e.message;
+      if (manual === true) toast(e.message);
+      return { error: e.message };
+    }finally{
+      syncBusy = false;
+      if (syncAgain){ syncAgain = false; syncKick(); }
+    }
+  }
+  function syncSetupCode(c){ return 'CMPD1.'+btoa(JSON.stringify({ o: c.owner, r: c.repo, k: c.token })); }
+  function syncParseCode(code){
+    var m = String(code || '').trim().match(/^CMPD1\.([A-Za-z0-9+/=]+)$/);
+    if (!m) return null;
+    try{ var o = JSON.parse(atob(m[1])); return o.o && o.r && o.k ? { owner:o.o, repo:o.r, token:o.k } : null; }catch(e){ return null; }
+  }
+  async function syncConnect(token, repoName, device){
+    var c = { token: token.trim(), repo: (repoName || 'compound-sync').trim(), device: device };
+    var me = await gh(c, 'GET', '/user');
+    if (!me.ok) throw ghError(me, 'read your account');
+    c.owner = me.data.login;
+    var repo = await gh(c, 'GET', '/repos/'+c.owner+'/'+c.repo);
+    if (repo.status === 404){
+      var mk = await gh(c, 'POST', '/user/repos', { name: c.repo, private: true, auto_init: true, description: 'Private data file for the Compound app' });
+      if (!mk.ok) throw new Error('Could not find or create the repo "'+c.repo+'". Create it as a private repo on GitHub, then try again.');
+    } else if (!repo.ok) throw ghError(repo, 'see the repo');
+    else if (repo.data && repo.data.private === false) throw new Error('The repo "'+c.repo+'" is public. Make it private first so nobody else can read your ledger.');
+    return c;
+  }
+  function deviceName(){
+    var ua = navigator.userAgent || '';
+    return /iPad|Macintosh.*Mobile/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'iPad' : /iPhone/.test(ua) ? 'iPhone' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows laptop' : /Mac/.test(ua) ? 'Mac' : 'device';
+  }
+
+  function openSync(msg){
+    var modalRoot = document.getElementById('modalRoot');
+    var c = syncConf();
+    var body;
+    if (!c){
+      body = '<h3>Sync between devices</h3>' +
+        '<p>Each device keeps its own copy of your ledger. Turn sync on here and on your other devices and they share one copy, stored in a private GitHub repo that only you can open. Free, no new account.</p>' +
+        '<p class="ai-note"><b>Already set up on another device?</b> There, open sync → Setup code, then paste the code here.</p>' +
+        '<div class="field-row"><div><span class="field-label">Setup code from another device</span><input type="text" id="syncCode" autocomplete="off" placeholder="CMPD1.…"></div></div>' +
+        '<div class="row-btns" style="justify-content:flex-start;margin-bottom:16px;"><button class="btn small" id="syncCodeGo">Use setup code</button></div>' +
+        '<p style="margin-bottom:8px;"><b>First device:</b></p>' +
+        '<ol class="sync-steps">' +
+          '<li>Open <a href="https://github.com/new?name=compound-sync&visibility=private" target="_blank" rel="noopener">github.com/new</a>, name the repo <b>compound-sync</b>, choose <b>Private</b>, then <b>Create repository</b>.</li>' +
+          '<li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">new fine-grained token</a>. Repository access: <b>Only select repositories → compound-sync</b>. Permissions → Repository → <b>Contents: Read and write</b>. Pick the longest expiry, then <b>Generate token</b> and copy it.</li>' +
+          '<li>Paste it below and tap Connect.</li></ol>' +
+        '<div class="field-row"><div><span class="field-label">GitHub token</span><input type="password" id="syncToken" autocomplete="off" placeholder="github_pat_…"></div></div>' +
+        '<p id="syncMsg" style="min-height:18px;margin-bottom:12px;">'+escapeHtml(msg || '')+'</p>' +
+        '<div class="row-btns"><button class="btn ghost small" id="syncClose">Not now</button><button class="btn small" id="syncGo">Connect</button></div>';
+    } else {
+      body = '<h3>Sync between devices</h3>' +
+        '<p>On. This '+escapeHtml(c.device || 'device')+' syncs with <b>'+escapeHtml(c.owner+'/'+c.repo)+'</b> when the app opens, a few seconds after each change, and every minute while it is open.</p>' +
+        '<p>Last sync: <b>'+(c.lastSync ? escapeHtml(new Date(c.lastSync).toLocaleString()) : 'not yet')+'</b>'+(state.syncErr && state.syncError ? '<br><span style="color:var(--brick);">'+escapeHtml(state.syncError)+'</span>' : '')+'</p>' +
+        '<p class="ai-note"><b>Add another device:</b> open Compound there, tap sync, and paste this setup code. It contains your token, so only paste it into your own devices.</p>' +
+        '<div class="field-row"><div><input type="text" id="syncCodeOut" readonly value="'+escapeHtml(syncSetupCode(c))+'"></div></div>' +
+        '<p id="syncMsg" style="min-height:18px;margin-bottom:12px;">'+escapeHtml(msg || '')+'</p>' +
+        '<div class="row-btns" style="flex-wrap:wrap;"><button class="btn ghost small" id="syncOff">Turn off here</button><button class="btn ghost small" id="syncCopy">Copy setup code</button><button class="btn small" id="syncNowBtn">Sync now</button><button class="btn small" id="syncClose">Done</button></div>';
+    }
+    modalRoot.innerHTML = '<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-label="Sync">'+body+'</div></div>';
+    var $ = function(id){ return document.getElementById(id); };
+    var say = function(t){ var m = $('syncMsg'); if (m) m.textContent = t; };
+    $('syncClose').onclick = function(){ modalRoot.innerHTML = ''; };
+    $('modalBg').addEventListener('click', function(e){ if (e.target.id === 'modalBg') modalRoot.innerHTML = ''; });
+    async function connectWith(fn){
+      try{
+        var nc = await fn();
+        nc.device = nc.device || deviceName();
+        syncSaveConf(nc);
+        window.localStorage.removeItem('compound-sync-base');       // first sync on this device merges everything
+        say('Connected. Syncing…');
+        var r = await syncNow('quiet');
+        if (r && r.error){ say(r.error); return; }
+        openSync('Synced. Your data from this device is now on GitHub'+(r && r.changedLocal ? ', and data from your other devices is here.' : '.'));
+        render(); renderSyncLabel();
+      }catch(e){ syncSaveConf(null); say(e.message); }
+    }
+    if (!c){
+      $('syncGo').onclick = function(){
+        var t = ($('syncToken').value || '').trim();
+        if (!t){ say('Paste the token first.'); return; }
+        say('Connecting…');
+        connectWith(function(){ return syncConnect(t, 'compound-sync', deviceName()); });
+      };
+      $('syncCodeGo').onclick = function(){
+        var p = syncParseCode($('syncCode').value);
+        if (!p){ say('That setup code is not complete. Copy the whole code, starting with CMPD1.'); return; }
+        say('Connecting…');
+        connectWith(function(){ return syncConnect(p.token, p.repo, deviceName()); });
+      };
+    } else {
+      $('syncNowBtn').onclick = async function(){ say('Syncing…'); var r = await syncNow(true); openSync(r && r.error ? r.error : 'Up to date.'); };
+      $('syncCopy').onclick = async function(){ var ok = await copyText(syncSetupCode(c)); say(ok ? 'Copied. Paste it into Compound on your other device.' : 'Select the code above and copy it.'); var o = $('syncCodeOut'); if (o){ o.focus(); o.select(); } };
+      $('syncOff').onclick = function(){ syncSaveConf(null); window.localStorage.removeItem('compound-sync-base'); modalRoot.innerHTML = ''; renderSyncLabel(); toast('Sync is off on this device. Your data here stays as it is.'); };
+    }
+  }
+  function renderSyncLabel(){
+    var c = syncConf();
+    syncStatus(c ? (c.lastSync ? 'synced '+new Date(c.lastSync).toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' }) : 'sync on') : 'sync off');
+  }
+  document.getElementById('syncBtn').onclick = function(){ openSync(); };
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') syncNow('quiet'); });
+  window.addEventListener('online', function(){ syncNow('quiet'); });
+  setInterval(function(){ if (document.visibilityState !== 'hidden') syncNow('quiet'); }, 60000);
+
   /* ---------------- boot ---------------- */
   (async function boot(){
     // backups must never hold up loading the ledger
@@ -3901,6 +4180,8 @@
     rememberLevel();
     render();
     updateBackupLabel();
+    renderSyncLabel();
+    syncNow('quiet');
     setTimeout(function(){ preloadVoice(voiceSettings().gender === 'm' ? 'm' : 'f'); }, 600);
   })();
 
