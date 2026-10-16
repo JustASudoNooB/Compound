@@ -482,7 +482,7 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.3 · 16 Oct</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.4 · 16 Oct</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
       &nbsp;·&nbsp;
@@ -3759,7 +3759,7 @@
           into an on-device backup (IndexedDB), plus one copy a day.
        3. A key that cannot be read is set aside, never overwritten blindly.
        4. Reset and restore take a backup first, so both can be undone. */
-  var APP_VERSION = '6.3';
+  var APP_VERSION = '6.4';
   var DATA_VERSION = 2;          // bump only with a migration below
   var BK_DB = 'compound-backups', BK_STORE = 'snaps', BK_KEEP_DAILY = 14, BK_KEEP_OTHER = 12;
   var MIGRATIONS = {
@@ -3790,10 +3790,14 @@
       r.onupgradeneeded = function(){ if (!r.result.objectStoreNames.contains(BK_STORE)) r.result.createObjectStore(BK_STORE, { keyPath:'id' }); };
       r.onsuccess = function(){ resolve(r.result); };
       r.onerror = function(){ reject(r.error || new Error('IndexedDB open failed')); };
+      r.onblocked = function(){ reject(new Error('IndexedDB blocked')); };
     });
   }
+  function withTimeout(promise, ms, label){
+    return Promise.race([promise, new Promise(function(_, reject){ setTimeout(function(){ reject(new Error((label || 'step')+' timed out')); }, ms); })]);
+  }
   async function bkRun(mode, fn){
-    var db = await bkOpen();
+    var db = await withTimeout(bkOpen(), 2000, 'backup storage');
     return new Promise(function(resolve, reject){
       var tx = db.transaction(BK_STORE, mode), req = fn(tx.objectStore(BK_STORE));
       tx.oncomplete = function(){ db.close(); resolve(req ? req.result : undefined); };
@@ -3851,7 +3855,7 @@
     if (hasData && last !== today){ if (await takeSnapshot('daily')){ try{ window.localStorage.setItem('compound-lastsnap', today); }catch(e){} } }
     try{ window.localStorage.setItem('compound:meta:version', JSON.stringify({ app: APP_VERSION, data: Math.max(from, DATA_VERSION), updatedAt: new Date().toISOString() })); }catch(e){}
     // ask the browser not to evict this site's storage under pressure
-    try{ if (navigator.storage && navigator.storage.persist) state.persisted = await navigator.storage.persist(); }catch(e){}
+    try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist().then(function(v){ state.persisted = v; }).catch(function(){}); }catch(e){}
   }
 
   function openBackups(){
@@ -3889,7 +3893,8 @@
 
   /* ---------------- boot ---------------- */
   (async function boot(){
-    try{ await guardUpgrade(); }catch(e){}
+    // backups must never hold up loading the ledger
+    try{ await withTimeout(guardUpgrade(), 3000, 'backup'); }catch(e){}
     await loadAll();
     await loadDayRecs();
     trainBrain();
