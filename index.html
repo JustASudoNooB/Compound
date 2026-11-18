@@ -12,7 +12,7 @@
   // apply the chosen look before the page paints
   (function(){ try{ var d = document.documentElement, a = JSON.parse(localStorage.getItem('compound-theme-applied') || 'null');
     if (!a){ var t = localStorage.getItem('compound-theme'), m = { matchday:'#07142a', terminal:'#000000', manga:'#ffffff', sakura:'#1d1a3a' }; if (m[t]) a = { t:t, m:m[t] }; }
-    if (a && a.t){ d.setAttribute('data-theme', a.t); if (a.fam){ d.setAttribute('data-fam', a.fam); d.style.setProperty('--h1', a.h1); d.style.setProperty('--h2', a.h2); } if (a.dark) d.setAttribute('data-dark', ''); document.querySelector('meta[name="theme-color"]').setAttribute('content', a.m); } }catch(e){} })();
+    if (a && a.t){ d.setAttribute('data-theme', a.t); if (a.fam){ d.setAttribute('data-fam', a.fam); d.style.setProperty('--h1', a.h1); d.style.setProperty('--h2', a.h2); } if (a.dark) d.setAttribute('data-dark', ''); if (a.kit) d.setAttribute('data-kit', ''); document.querySelector('meta[name="theme-color"]').setAttribute('content', a.m); } }catch(e){} })();
 </script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -943,6 +943,254 @@
     html[data-fam]::before, html[data-fam] body::before, html[data-fam] body::after, html[data-fam] .brand, html[data-fam] .cele::before, html[data-fam] .cele::after, html[data-fam] .cele-title, html[data-fam] .cele-card::before{ animation:none !important; }
   }
 
+
+  /* ================= genre looks (v7.4) =================
+     These share one skeleton (html[data-kit]) driven by a few variables, so
+     each look only sets its colours, its background layers and its celebration. */
+  html[data-kit] body{ background:transparent !important; background-image:none !important; }
+  html[data-kit]::before, html[data-kit] body::before, html[data-kit] body::after{ content:''; position:fixed; pointer-events:none; z-index:-1; }
+  html[data-kit] .brand{ color:var(--k-chrome); font-family:var(--font-display); }
+  html[data-kit] .brand small{ color:var(--k-chrome-soft); }
+  html[data-kit] .masthead-inner{ border-bottom:var(--k-mast-line); }
+  html[data-kit] .streak-badge, html[data-kit] .level-badge{ color:var(--k-chrome-soft); }
+  html[data-kit] .streak-badge b, html[data-kit] .level-badge b{ color:var(--k-chrome); }
+  html[data-kit] .level-badge .lvl-track{ background:var(--k-tab-bg); border-color:var(--k-tab-line); }
+  html[data-kit] .search-btn{ color:var(--k-chrome) !important; border-color:var(--k-tab-line) !important; background:var(--k-tab-bg) !important; border-radius:var(--k-btn-radius); }
+  html[data-kit] .tab{ background:var(--k-tab-bg); border:1px solid var(--k-tab-line); border-bottom:none; color:var(--k-tab-ink); border-radius:var(--k-tab-radius); font-family:var(--k-tab-font, inherit); }
+  html[data-kit] .tab.active{ background:var(--k-tab-on-bg); color:var(--k-tab-on-ink); border-color:var(--k-tab-on-bg); }
+  html[data-kit] main.sheet{ background:var(--k-sheet-bg); border:var(--k-sheet-border); border-radius:var(--k-sheet-radius); box-shadow:var(--k-sheet-shadow); }
+  html[data-kit] .section-title{ font-family:var(--font-display); }
+  html[data-kit] .btn{ background:var(--k-btn-bg); color:var(--k-btn-ink); border:1px solid var(--k-btn-bg); border-radius:var(--k-btn-radius); }
+  html[data-kit] .btn.ghost{ background:transparent; color:var(--ink); border-color:var(--rule-strong); }
+  html[data-kit] .tick.done{ background:var(--teal); border-color:var(--teal); }
+  html[data-kit] .modal{ border:var(--k-sheet-border); border-radius:var(--k-modal-radius, 12px); }
+  html[data-kit] .footbar, html[data-kit] .footbar button, html[data-kit] #status{ color:var(--k-chrome-soft); }
+  html[data-kit] .cele{ background:var(--k-cele-bg); }
+  html[data-kit] .cele-card{ background:var(--k-card-bg); border:var(--k-card-border); border-radius:var(--k-card-radius); }
+  html[data-kit] .cele-title{ font-family:var(--font-display); color:var(--k-title); }
+  html[data-kit] .cele-sub{ color:var(--k-sub); }
+
+  /* ---------- Portfolio: your site's look ---------- */
+  html[data-theme="portfolio"]{
+    --sheet:#101217; --sheet-2:#161920; --ink:#F2F1EC; --ink-soft:#a3a8b1; --ink-faint:#6b707a; --rule:#20232B; --rule-strong:#2d313b;
+    --teal:#6EE7B7; --teal-light:#11281f; --brick:#FF7A7A; --brick-light:#2c1515; --brass:#FFC567; --brass-light:#2b2212; --brass-ink:#FFC567;
+    --radius:14px; --shadow:0 30px 60px -30px rgba(0,0,0,.9);
+    --font-display:'Bricolage Grotesque','SF Pro Display','Segoe UI Variable Display','Segoe UI',system-ui,sans-serif; --font-body:'Bricolage Grotesque',-apple-system,'Segoe UI',Roboto,sans-serif; --font-mono:'Geist Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --k-chrome:#F2F1EC; --k-chrome-soft:#8C919B; --k-mast-line:1px solid #20232B; --k-tab-bg:rgba(16,18,23,.7); --k-tab-line:#20232B; --k-tab-ink:#8C919B; --k-tab-on-bg:#101217; --k-tab-on-ink:#F2F1EC; --k-tab-radius:12px 12px 0 0;
+    --k-sheet-bg:rgba(16,18,23,.9); --k-sheet-border:1px solid #20232B; --k-sheet-radius:0 20px 20px 20px; --k-sheet-shadow:0 40px 80px -40px #000;
+    --k-btn-bg:#F2F1EC; --k-btn-ink:#07080B; --k-btn-radius:999px; --k-cele-bg:rgba(7,8,11,.88); --k-card-bg:transparent; --k-card-border:0; --k-card-radius:0; --k-title:#F2F1EC; --k-sub:#8C919B;
+    background:#07080B;
+  }
+  html[data-theme="portfolio"]::before{ left:0; top:0; width:200vw; height:70vh; opacity:.55;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='600' viewBox='0 0 1200 600'%3E%3Cg fill='none' stroke-width='1.4'%3E%3Cpath d='M0 420 C200 380 300 260 520 250 S900 200 1200 160' stroke='%239AD7FF' stroke-opacity='.55'/%3E%3Cpath d='M0 460 C220 430 340 330 560 310 S920 270 1200 240' stroke='%239AD7FF' stroke-opacity='.3'/%3E%3Cpath d='M0 500 C240 480 380 400 600 380 S940 340 1200 320' stroke='%239AD7FF' stroke-opacity='.18'/%3E%3Cpath d='M0 380 C180 360 280 300 480 300 S860 280 1200 290' stroke='%23FFC567' stroke-opacity='.4'/%3E%3C/g%3E%3C/svg%3E") 0 0/50% 100% repeat-x;
+    -webkit-mask:linear-gradient(#000 40%, transparent); mask:linear-gradient(#000 40%, transparent); animation:pfDrift 40s linear infinite; }
+  @keyframes pfDrift{ to{ transform:translateX(-50%); } }
+  html[data-theme="portfolio"] body::before{ inset:0; background:radial-gradient(80% 60% at 20% 100%, #07080B 30%, transparent 75%); }
+  html[data-theme="portfolio"] .brand{ font-weight:800; letter-spacing:-.05em; font-size:34px; }
+  html[data-theme="portfolio"] .brand small{ font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; }
+  html[data-theme="portfolio"] .section-title{ font-weight:700; letter-spacing:-.04em; }
+  html[data-theme="portfolio"] .tab.active{ box-shadow:inset 0 2px 0 #9AD7FF; }
+  html[data-theme="portfolio"] .cele-title{ font-size:54px; font-weight:800; letter-spacing:-.05em; line-height:.95; }
+  html[data-theme="portfolio"] .cele-title::after{ content:'.'; color:#9AD7FF; }
+  html[data-theme="portfolio"] .cele-card{ animation:pfUp .9s cubic-bezier(.2,.8,.2,1) both; text-align:left; }
+  @keyframes pfUp{ from{ transform:translateY(40px); opacity:0; } }
+  html[data-theme="portfolio"] .cele-sub{ font-family:var(--font-mono); font-size:13px; letter-spacing:.06em; }
+  html[data-theme="portfolio"] .cele::before{ content:'KEPT ✦ COMPOUNDED ✦ ON TIME ✦ KEPT ✦ COMPOUNDED ✦ ON TIME ✦ KEPT ✦ COMPOUNDED ✦ ON TIME ✦'; position:absolute; left:0; bottom:16%; white-space:nowrap; font:600 28px var(--font-display); letter-spacing:-.02em; color:#2d313b; animation:pfTape 8s linear infinite; }
+  @keyframes pfTape{ to{ transform:translateX(-50%); } }
+
+  /* ---------- NIFTY Tape: phosphor market screen ---------- */
+  html[data-theme="nifty"]{
+    --sheet:#03120a; --sheet-2:#06180e; --ink:#b8ffd6; --ink-soft:#5fd497; --ink-faint:#2f8a5a; --rule:#0e3a22; --rule-strong:#16573a;
+    --teal:#33ff99; --teal-light:#07301b; --brick:#ff5c5c; --brick-light:#2a0c0c; --brass:#33ff99; --brass-light:#0a2c18; --brass-ink:#7dffb9;
+    --radius:2px; --shadow:none;
+    --font-display:ui-monospace,'SF Mono','Cascadia Mono',Consolas,Menlo,monospace; --font-body:ui-monospace,'SF Mono','Cascadia Mono',Consolas,Menlo,monospace;
+    --k-chrome:#33ff99; --k-chrome-soft:#2f8a5a; --k-mast-line:1px dashed #1f7a4a; --k-tab-bg:#020a05; --k-tab-line:#16573a; --k-tab-ink:#5fd497; --k-tab-on-bg:#33ff99; --k-tab-on-ink:#012010; --k-tab-radius:0;
+    --k-sheet-bg:rgba(2,12,6,.9); --k-sheet-border:1px solid #16573a; --k-sheet-radius:0; --k-sheet-shadow:0 0 40px -10px rgba(51,255,153,.25), inset 0 0 60px rgba(51,255,153,.04);
+    --k-btn-bg:#33ff99; --k-btn-ink:#012010; --k-btn-radius:0; --k-cele-bg:rgba(1,8,4,.88); --k-card-bg:#020a05; --k-card-border:1px solid #33ff99; --k-card-radius:0; --k-title:#33ff99; --k-sub:#7dffb9; --k-modal-radius:0;
+    background:radial-gradient(120% 90% at 50% 40%, #04170c, #010603 80%);
+    font-size:14px;
+  }
+  html[data-theme="nifty"]::before{ left:0; top:12vh; width:200vw; height:60vh; opacity:.35;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='480' height='300'%3E%3Cg stroke-width='2'%3E%3Cpath d='M20 150v70M60 120v80M100 140v60M140 100v70M180 90v60M220 120v80M260 80v60M300 60v70M340 90v50M380 50v60M420 70v50M460 30v60' stroke='%2333ff99'/%3E%3Cpath d='M240 110v90M80 130v70' stroke='%23ff5c5c'/%3E%3C/g%3E%3Cg fill='%2333ff99'%3E%3Crect x='14' y='165' width='12' height='35'/%3E%3Crect x='54' y='135' width='12' height='45'/%3E%3Crect x='94' y='150' width='12' height='30'/%3E%3Crect x='134' y='110' width='12' height='40'/%3E%3Crect x='174' y='100' width='12' height='30'/%3E%3Crect x='254' y='90' width='12' height='35'/%3E%3Crect x='294' y='70' width='12' height='40'/%3E%3Crect x='334' y='100' width='12' height='25'/%3E%3Crect x='374' y='60' width='12' height='35'/%3E%3Crect x='414' y='80' width='12' height='25'/%3E%3Crect x='454' y='40' width='12' height='35'/%3E%3C/g%3E%3Cg fill='%23ff5c5c'%3E%3Crect x='214' y='130' width='12' height='45'/%3E%3Crect x='234' y='120' width='12' height='50'/%3E%3C/g%3E%3C/svg%3E") 0 50%/480px 300px repeat-x;
+    animation:pfDrift 30s linear infinite; }
+  html[data-theme="nifty"] body::before{ inset:0; z-index:300; background:repeating-linear-gradient(to bottom, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
+  html[data-theme="nifty"] body::after{ left:0; bottom:0; height:24px; line-height:24px; white-space:nowrap; z-index:60; background:#33ff99; color:#012010; font:700 12px var(--font-mono); padding-left:100vw;
+    content:'NIFTY 50 ▲   BANK NIFTY ▲   PROMISES KEPT ▲   DISCIPLINE ▲   COMPOUNDING ▲   EXCUSES ▼   STREAK ▲   NIFTY 50 ▲   BANK NIFTY ▲   PROMISES KEPT ▲   DISCIPLINE ▲   COMPOUNDING ▲   EXCUSES ▼   STREAK ▲';
+    animation:niftyTape 26s linear infinite; }
+  @keyframes niftyTape{ to{ transform:translateX(-100%); } }
+  html[data-theme="nifty"] body{ padding-bottom:calc(30px + env(safe-area-inset-bottom)); }
+  html[data-theme="nifty"] .brand{ text-transform:uppercase; letter-spacing:.06em; font-weight:700; text-shadow:0 0 10px rgba(51,255,153,.7); }
+  html[data-theme="nifty"] .brand::before{ content:'▲ '; }
+  html[data-theme="nifty"] .section-title{ color:#33ff99; text-transform:uppercase; letter-spacing:.04em; font-size:20px; text-shadow:0 0 8px rgba(51,255,153,.5); }
+  html[data-theme="nifty"] .cele-title{ font-size:48px; font-weight:800; text-shadow:0 0 18px rgba(51,255,153,.9); animation:crt 2.2s steps(1) infinite; }
+  html[data-theme="nifty"] .cele-title::before{ content:'▲ '; }
+  @keyframes crt{ 0%,100%{ opacity:1; } 7%{ opacity:.55; } 8%{ opacity:1; } 54%{ opacity:.8; } 55%{ opacity:1; } }
+  html[data-theme="nifty"] .cele-card{ padding:22px 26px; box-shadow:0 0 50px rgba(51,255,153,.35); }
+
+  /* ---------- Skyward: anime sky ---------- */
+  html[data-theme="skyward"]{
+    --sheet:#ffffff; --sheet-2:#f2f8ff; --ink:#1d2b4a; --ink-soft:#56658a; --ink-faint:#9aa6c2; --rule:#dfe9f7; --rule-strong:#bfd2ee;
+    --teal:#2f7de1; --teal-light:#e3efff; --brick:#ef5b6b; --brick-light:#ffe6e9; --brass:#ff9f43; --brass-light:#fff1df; --brass-ink:#c46a12;
+    --radius:16px; --shadow:0 24px 50px -24px rgba(30,80,160,.45);
+    --font-display:'Hiragino Maru Gothic ProN','Arial Rounded MT Bold','Nunito','Varela Round',system-ui,sans-serif; --font-body:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+    --k-chrome:#0f2550; --k-chrome-soft:#2a4778; --k-mast-line:2px solid rgba(255,255,255,.85); --k-tab-bg:rgba(255,255,255,.6); --k-tab-line:rgba(255,255,255,.9); --k-tab-ink:#1d3a6a; --k-tab-on-bg:#ffffff; --k-tab-on-ink:#1d2b4a; --k-tab-radius:16px 16px 0 0;
+    --k-sheet-bg:rgba(255,255,255,.94); --k-sheet-border:1px solid rgba(255,255,255,.95); --k-sheet-radius:0 22px 22px 22px; --k-sheet-shadow:0 30px 60px -30px rgba(20,70,150,.55);
+    --k-btn-bg:#2f7de1; --k-btn-ink:#fff; --k-btn-radius:999px; --k-cele-bg:rgba(120,190,255,.45); --k-card-bg:#fff; --k-card-border:3px solid #fff; --k-card-radius:28px; --k-title:#ff7a45; --k-sub:#56658a;
+    background:linear-gradient(to bottom, #3d8fe0 0%, #7cbcf2 40%, #cfe8ff 75%, #fff2dc 100%) fixed;
+  }
+  html[data-theme="skyward"]::before{ left:0; top:6vh; width:200vw; height:40vh; opacity:.95;
+    background:
+      radial-gradient(60px 36px at 10% 40%, #fff 98%, transparent), radial-gradient(80px 50px at 15% 30%, #fff 98%, transparent), radial-gradient(70px 40px at 20% 42%, #fff 98%, transparent),
+      radial-gradient(50px 30px at 55% 60%, #fff 98%, transparent), radial-gradient(70px 44px at 60% 50%, #fff 98%, transparent), radial-gradient(60px 34px at 65% 62%, #fff 98%, transparent),
+      radial-gradient(90px 50px at 85% 20%, #fff 98%, transparent), radial-gradient(60px 36px at 80% 30%, #fff 98%, transparent);
+    background-size:50% 100%; background-repeat:repeat-x; filter:drop-shadow(0 8px 0 rgba(140,190,240,.5)); animation:pfDrift 90s linear infinite; }
+  html[data-theme="skyward"] body::before{ left:0; top:35vh; width:200vw; height:40vh; opacity:.7;
+    background:radial-gradient(40px 22px at 30% 50%, #fff 98%, transparent), radial-gradient(56px 30px at 34% 42%, #fff 98%, transparent), radial-gradient(44px 24px at 75% 70%, #fff 98%, transparent), radial-gradient(60px 30px at 79% 62%, #fff 98%, transparent);
+    background-size:50% 100%; animation:pfDrift 140s linear infinite reverse; }
+  html[data-theme="skyward"] body::after{ right:-10vmin; top:-10vmin; width:50vmin; height:50vmin; border-radius:50%; background:radial-gradient(circle, rgba(255,250,220,.95), rgba(255,240,190,.35) 40%, transparent 70%); }
+  html[data-theme="skyward"] .brand{ font-weight:800; letter-spacing:.01em; color:#fff; text-shadow:0 3px 0 #2f6fc4, 0 6px 14px rgba(20,60,130,.35); }
+  html[data-theme="skyward"] .brand small, html[data-theme="skyward"] .streak-badge, html[data-theme="skyward"] .level-badge{ text-shadow:0 0 6px #fff, 0 0 12px #fff; }
+  html[data-theme="skyward"] .section-title{ font-weight:800; color:#1d2b4a; }
+  html[data-theme="skyward"] .cele-card{ padding:30px 36px; box-shadow:0 30px 60px -20px rgba(30,90,180,.6); animation:skyPop .7s cubic-bezier(.2,1.6,.3,1) both; }
+  @keyframes skyPop{ from{ transform:scale(.3) rotate(8deg); opacity:0; } }
+  html[data-theme="skyward"] .cele-title{ font-size:64px; font-weight:900; text-shadow:0 4px 0 #ffd2b8, 0 0 24px rgba(255,160,80,.5); }
+
+  /* ---------- Track Day: running track ---------- */
+  html[data-theme="track"]{
+    --sheet:#fbfaf6; --sheet-2:#f1eee6; --ink:#16181c; --ink-soft:#4f5560; --ink-faint:#9a9fa8; --rule:#e2ddd2; --rule-strong:#c9c1b2;
+    --teal:#1f8a4c; --teal-light:#ddf2e4; --brick:#c8432b; --brick-light:#fbe1da; --brass:#ffcc00; --brass-light:#fff4c2; --brass-ink:#8a6d00;
+    --radius:4px; --shadow:0 20px 40px -20px rgba(0,0,0,.5);
+    --font-display:'Avenir Next Condensed','Bahnschrift','DIN Condensed','Arial Narrow',system-ui,sans-serif; --font-body:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+    --k-chrome:#ffffff; --k-chrome-soft:#f6d9cf; --k-mast-line:3px solid #fff; --k-tab-bg:rgba(255,255,255,.18); --k-tab-line:rgba(255,255,255,.6); --k-tab-ink:#fff; --k-tab-on-bg:#ffcc00; --k-tab-on-ink:#16181c; --k-tab-radius:4px 4px 0 0; --k-tab-font:var(--font-display);
+    --k-sheet-bg:#fbfaf6; --k-sheet-border:0; --k-sheet-radius:0 6px 6px 6px; --k-sheet-shadow:0 30px 50px -25px rgba(60,10,0,.7);
+    --k-btn-bg:#16181c; --k-btn-ink:#ffcc00; --k-btn-radius:4px; --k-cele-bg:rgba(30,8,4,.7); --k-card-bg:#16181c; --k-card-border:4px solid #ffcc00; --k-card-radius:8px; --k-title:#ffcc00; --k-sub:#fff;
+    background:#b9472f;
+  }
+  html[data-theme="track"]::before{ inset:-20vh -20vw; background:repeating-linear-gradient(-14deg, #b9472f 0 66px, rgba(255,255,255,.9) 66px 69px); animation:lanes 3s linear infinite; }
+  @keyframes lanes{ to{ transform:translate(-67.9px, -16.9px); } }
+  html[data-theme="track"] body::before{ left:-10vw; right:-10vw; top:-34vh; height:50vh; border-radius:0 0 50% 50%; background:repeating-linear-gradient(90deg, #2f8d46 0 60px, #2a8040 60px 120px); box-shadow:0 0 0 6px #fff; }
+  html[data-theme="track"] .brand{ font-weight:900; font-style:italic; text-transform:uppercase; letter-spacing:.02em; font-size:36px; text-shadow:0 3px 0 rgba(0,0,0,.25); }
+  html[data-theme="track"] .tab{ font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  html[data-theme="track"] .section-title{ font-weight:900; font-style:italic; text-transform:uppercase; font-size:30px; }
+  html[data-theme="track"] .cele-card{ padding:26px 34px; }
+  html[data-theme="track"] .cele-card::before{ content:''; position:absolute; left:50%; top:-46px; width:70px; height:70px; margin-left:-35px; border-radius:50%; border:6px solid #ffcc00; background:conic-gradient(#ffcc00 0 25%, #16181c 25%); animation:spin 1s linear infinite; }
+  html[data-theme="track"] .cele-title{ font-size:84px; font-weight:900; font-style:italic; letter-spacing:-.02em; line-height:.95; }
+  html[data-theme="track"] .cele-sub{ font-family:var(--font-display); text-transform:uppercase; letter-spacing:.1em; font-weight:700; }
+
+  /* ---------- Zen Garden: raked sand ---------- */
+  html[data-theme="zen"]{
+    --sheet:#faf7f0; --sheet-2:#f2ede1; --ink:#2b2a26; --ink-soft:#6c685d; --ink-faint:#a7a193; --rule:#e5dfd0; --rule-strong:#cfc6b2;
+    --teal:#5b7553; --teal-light:#e5ecdf; --brick:#b33a2b; --brick-light:#f6e0db; --brass:#b33a2b; --brass-light:#f5e4dc; --brass-ink:#8f2c20;
+    --radius:4px; --shadow:0 20px 40px -24px rgba(60,50,30,.4);
+    --font-display:'Hiragino Mincho ProN','Yu Mincho','Noto Serif JP',Georgia,serif; --font-body:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    --k-chrome:#2b2a26; --k-chrome-soft:#6c685d; --k-mast-line:1px solid #2b2a26; --k-tab-bg:rgba(250,247,240,.6); --k-tab-line:#cfc6b2; --k-tab-ink:#6c685d; --k-tab-on-bg:#faf7f0; --k-tab-on-ink:#2b2a26; --k-tab-radius:2px 2px 0 0;
+    --k-sheet-bg:rgba(250,247,240,.95); --k-sheet-border:1px solid #cfc6b2; --k-sheet-radius:0 4px 4px 4px; --k-sheet-shadow:0 30px 60px -36px rgba(60,50,30,.5);
+    --k-btn-bg:#2b2a26; --k-btn-ink:#faf7f0; --k-btn-radius:2px; --k-cele-bg:rgba(236,230,216,.82); --k-card-bg:transparent; --k-card-border:0; --k-card-radius:0; --k-title:#2b2a26; --k-sub:#6c685d;
+    background:#ebe5d6 repeating-linear-gradient(0deg, rgba(110,95,65,.13) 0 1px, transparent 1px 9px);
+  }
+  html[data-theme="zen"]::before{ left:-8vmin; top:42vh; width:60vmin; height:60vmin; border-radius:50%;
+    background:radial-gradient(circle, #6d665a 0 9%, #ebe5d6 9.5% 12%, transparent 12%), repeating-radial-gradient(circle, #ebe5d6 0 9px, rgba(110,95,65,.3) 9px 10px);
+    -webkit-mask:radial-gradient(circle, #000 55%, transparent 70%); mask:radial-gradient(circle, #000 55%, transparent 70%); animation:breathe 9s ease-in-out infinite; }
+  html[data-theme="zen"] body::before{ right:2vw; bottom:6vh; width:44vmin; height:44vmin; border-radius:50%;
+    background:radial-gradient(circle, #57534a 0 10%, #ebe5d6 10.5% 13%, transparent 13%), repeating-radial-gradient(circle, #ebe5d6 0 9px, rgba(110,95,65,.3) 9px 10px);
+    -webkit-mask:radial-gradient(circle, #000 55%, transparent 70%); mask:radial-gradient(circle, #000 55%, transparent 70%); animation:breathe 11s ease-in-out infinite reverse; }
+  @keyframes breathe{ 50%{ transform:scale(1.04); } }
+  html[data-theme="zen"] .brand{ font-weight:500; letter-spacing:.12em; }
+  html[data-theme="zen"] .section-title{ font-weight:500; letter-spacing:.06em; }
+  html[data-theme="zen"] .cele-card{ padding:60px 40px; }
+  html[data-theme="zen"] .cele-card::before{ content:''; position:absolute; left:50%; top:50%; width:230px; height:230px; margin:-115px 0 0 -115px; border-radius:50%; border:14px solid #2b2a26; border-right-color:transparent; transform:rotate(-30deg); opacity:.88; animation:enso 1.4s ease-out both; }
+  @keyframes enso{ from{ transform:rotate(-200deg) scale(.85); opacity:0; } }
+  html[data-theme="zen"] .cele-title{ font-size:46px; font-weight:500; letter-spacing:.08em; position:relative; }
+  html[data-theme="zen"] .cele-sub{ position:relative; font-style:italic; }
+
+  /* ---------- Tide: slow ocean ---------- */
+  html[data-theme="tide"]{
+    --sheet:#06263a; --sheet-2:#0a3049; --ink:#e7f6f8; --ink-soft:#9cc8d0; --ink-faint:#5f8e99; --rule:rgba(160,220,230,.14); --rule-strong:rgba(160,220,230,.3);
+    --teal:#4fd1c5; --teal-light:#0b3a45; --brick:#ff8a7a; --brick-light:#3a1c1c; --brass:#ffd6a5; --brass-light:#3a2e1d; --brass-ink:#ffe2bd;
+    --radius:16px; --shadow:0 30px 60px -30px rgba(0,0,0,.7);
+    --font-display:'Avenir Next','Segoe UI Variable Display','Segoe UI',-apple-system,system-ui,sans-serif; --font-body:'Avenir Next',-apple-system,'Segoe UI',Roboto,sans-serif;
+    --k-chrome:#e7f6f8; --k-chrome-soft:#8fbcc5; --k-mast-line:1px solid rgba(160,220,230,.35); --k-tab-bg:rgba(6,38,58,.45); --k-tab-line:rgba(160,220,230,.25); --k-tab-ink:#9cc8d0; --k-tab-on-bg:rgba(6,38,58,.9); --k-tab-on-ink:#e7f6f8; --k-tab-radius:14px 14px 0 0;
+    --k-sheet-bg:rgba(4,30,46,.78); --k-sheet-border:1px solid rgba(160,220,230,.22); --k-sheet-radius:0 20px 20px 20px; --k-sheet-shadow:0 40px 80px -40px rgba(0,0,0,.9);
+    --k-btn-bg:#4fd1c5; --k-btn-ink:#032029; --k-btn-radius:999px; --k-cele-bg:rgba(2,21,38,.7); --k-card-bg:rgba(6,38,58,.8); --k-card-border:1px solid rgba(160,220,230,.35); --k-card-radius:24px; --k-title:#e7f6f8; --k-sub:#9cc8d0;
+    background:linear-gradient(to bottom, #0b5468 0%, #063049 40%, #021526 100%) fixed;
+  }
+  html[data-theme="tide"]::before{ left:0; top:0; width:100vw; height:60vh; background:radial-gradient(40vmax 14vmax at 30% 0, rgba(180,240,255,.18), transparent 70%), radial-gradient(30vmax 10vmax at 75% 5%, rgba(180,240,255,.14), transparent 70%); animation:breathe 8s ease-in-out infinite; }
+  html[data-theme="tide"] body::before, html[data-theme="tide"] body::after{ left:0; bottom:0; width:200vw; height:26vh;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='200' viewBox='0 0 800 200' preserveAspectRatio='none'%3E%3Cpath d='M0 80 C100 40 200 40 300 80 S500 120 600 80 S750 40 800 80 V200 H0Z' fill='%234fd1c5' fill-opacity='.14'/%3E%3C/svg%3E") 0 100%/50% 100% repeat-x; animation:pfDrift 26s linear infinite; }
+  html[data-theme="tide"] body::after{ height:18vh; opacity:.9; animation-duration:17s; animation-direction:reverse; }
+  html[data-theme="tide"] .brand{ font-weight:600; letter-spacing:.02em; }
+  html[data-theme="tide"] main.sheet{ -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }
+  html[data-theme="tide"] .cele-card{ padding:30px 36px; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); }
+  html[data-theme="tide"] .cele::before{ content:''; position:absolute; left:50%; top:50%; width:140px; height:140px; margin:-70px 0 0 -70px; border-radius:50%; border:2px solid rgba(79,209,197,.7); animation:ping 2.4s ease-out infinite; }
+  html[data-theme="tide"] .cele-title{ font-size:52px; font-weight:600; letter-spacing:-.01em; }
+
+  /* ---------- Blueprint: engineering drawing ---------- */
+  html[data-theme="blueprint"]{
+    --sheet:#0d3f8c; --sheet-2:#0f4a9e; --ink:#f2f7ff; --ink-soft:#b9cff2; --ink-faint:#7c9cd0; --rule:rgba(255,255,255,.16); --rule-strong:rgba(255,255,255,.35);
+    --teal:#9de7ff; --teal-light:#164f9f; --brick:#ff7a6b; --brick-light:#4a2a5a; --brass:#ffd84d; --brass-light:#28488a; --brass-ink:#ffe27a;
+    --radius:0px; --shadow:none;
+    --font-display:'Bahnschrift','DIN Alternate','Avenir Next Condensed','Arial Narrow',system-ui,sans-serif; --font-body:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+    --k-chrome:#ffffff; --k-chrome-soft:#b9cff2; --k-mast-line:2px solid #fff; --k-tab-bg:transparent; --k-tab-line:rgba(255,255,255,.45); --k-tab-ink:#d6e4fb; --k-tab-on-bg:#ffffff; --k-tab-on-ink:#0b3a82; --k-tab-radius:0; --k-tab-font:var(--font-display);
+    --k-sheet-bg:rgba(11,58,130,.92); --k-sheet-border:1px solid rgba(255,255,255,.7); --k-sheet-radius:0; --k-sheet-shadow:inset 0 0 0 6px rgba(11,58,130,.92), inset 0 0 0 7px rgba(255,255,255,.35);
+    --k-btn-bg:#ffffff; --k-btn-ink:#0b3a82; --k-btn-radius:0; --k-cele-bg:rgba(8,40,96,.75); --k-card-bg:transparent; --k-card-border:0; --k-card-radius:0; --k-title:#ff6b5b; --k-sub:#fff; --k-modal-radius:0;
+    background:#0b3a82 linear-gradient(rgba(255,255,255,.18) 1px, transparent 1px) 0 0/100px 100px, linear-gradient(90deg, rgba(255,255,255,.18) 1px, transparent 1px) 0 0/100px 100px;
+  }
+  html[data-theme="blueprint"]::before{ inset:0; background:linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px) 0 0/20px 20px, linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px) 0 0/20px 20px; }
+  html[data-theme="blueprint"] body::before{ right:-18vmin; top:34vh; width:56vmin; height:56vmin; opacity:.3; animation:spin 60s linear infinite;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-100 -100 200 200'%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.2'%3E%3Ccircle r='60'/%3E%3Ccircle r='22'/%3E%3Ccircle r='8'/%3E%3Cpath d='M0-60V-78M0 60V78M-60 0H-78M60 0H78M42-42L55-55M-42 42L-55 55M42 42L55 55M-42-42L-55-55' stroke-width='9'/%3E%3Cpath d='M-95 0H95M0-95V95' stroke-dasharray='6 4' stroke-width='.6'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
+  html[data-theme="blueprint"] body::after{ left:3vw; bottom:4vh; width:40vmin; height:24vmin; opacity:.35;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'%3E%3Cg fill='none' stroke='%23fff' stroke-width='1'%3E%3Crect x='20' y='30' width='120' height='60'/%3E%3Ccircle cx='160' cy='60' r='20'/%3E%3Cpath d='M20 105H140M20 100V110M140 100V110M150 20V40M170 20V40M150 25H170' /%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
+  html[data-theme="blueprint"] .brand{ text-transform:uppercase; letter-spacing:.24em; font-weight:700; font-size:26px; border:2px solid #fff; padding:4px 12px; display:inline-block; }
+  html[data-theme="blueprint"] .brand small{ font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.1em; font-size:10.5px; margin-top:6px; }
+  html[data-theme="blueprint"] .tab{ text-transform:uppercase; letter-spacing:.12em; }
+  html[data-theme="blueprint"] .section-title{ text-transform:uppercase; letter-spacing:.1em; font-weight:700; }
+  html[data-theme="blueprint"] .cele-title{ font-size:38px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; border:5px solid #ff6b5b; padding:6px 16px; transform:rotate(-8deg); display:inline-block; text-shadow:none; animation:stamp .45s cubic-bezier(.3,1.6,.4,1) both; }
+  @keyframes stamp{ from{ transform:rotate(-8deg) scale(2.4); opacity:0; } }
+  html[data-theme="blueprint"] .cele-sub{ font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.12em; margin-top:18px; }
+
+  /* ---------- Arcade: 8-bit ---------- */
+  html[data-theme="arcade"]{
+    --sheet:#1a0b3a; --sheet-2:#240f4f; --ink:#f5f0ff; --ink-soft:#c3b5ec; --ink-faint:#8c7cc0; --rule:#3a2370; --rule-strong:#5a3aa8;
+    --teal:#00e5ff; --teal-light:#0b2f50; --brick:#ff2e88; --brick-light:#3a0b2e; --brass:#ffe600; --brass-light:#3a3410; --brass-ink:#ffe600;
+    --radius:0px; --shadow:none;
+    --font-display:ui-monospace,'SF Mono','Cascadia Mono',Consolas,Menlo,monospace; --font-body:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+    --k-chrome:#ffe600; --k-chrome-soft:#c3b5ec; --k-mast-line:4px solid #ff2e88; --k-tab-bg:#1a0b3a; --k-tab-line:#5a3aa8; --k-tab-ink:#c3b5ec; --k-tab-on-bg:#00e5ff; --k-tab-on-ink:#0d0221; --k-tab-radius:0; --k-tab-font:var(--font-display);
+    --k-sheet-bg:#1a0b3a; --k-sheet-border:4px solid #ff2e88; --k-sheet-radius:0; --k-sheet-shadow:8px 8px 0 #00e5ff;
+    --k-btn-bg:#ffe600; --k-btn-ink:#0d0221; --k-btn-radius:0; --k-cele-bg:rgba(13,2,33,.88); --k-card-bg:transparent; --k-card-border:0; --k-card-radius:0; --k-title:#ffe600; --k-sub:#00e5ff; --k-modal-radius:0;
+    background:#0d0221;
+  }
+  html[data-theme="arcade"]::before{ inset:0;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' shape-rendering='crispEdges'%3E%3Cg fill='%23fff'%3E%3Crect x='20' y='30' width='3' height='3'/%3E%3Crect x='120' y='12' width='3' height='3'/%3E%3Crect x='200' y='80' width='3' height='3'/%3E%3Crect x='60' y='150' width='3' height='3'/%3E%3Crect x='160' y='200' width='3' height='3'/%3E%3C/g%3E%3Cg fill='%2300e5ff'%3E%3Crect x='90' y='100' width='3' height='3'/%3E%3Crect x='220' y='170' width='3' height='3'/%3E%3C/g%3E%3Cg fill='%23ff2e88'%3E%3Crect x='30' y='210' width='3' height='3'/%3E%3C/g%3E%3C/svg%3E") 0 0/240px 240px;
+    animation:starfall 8s linear infinite; }
+  @keyframes starfall{ to{ background-position:0 240px; } }
+  html[data-theme="arcade"] body::before{ left:0; right:0; bottom:0; height:16vh; background:
+      linear-gradient(to top, #ff2e88 0 6px, transparent 6px),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48' shape-rendering='crispEdges'%3E%3Cpath d='M0 48V36H12V24H24V12H36V24H48V36H60V24H72V36H84V24H96V48Z' fill='%233a1a78'/%3E%3C/svg%3E") 0 100%/96px 48px repeat-x;
+    animation:pixRun 4s steps(24) infinite; }
+  @keyframes pixRun{ to{ background-position:0 0, -96px 100%; } }
+  html[data-theme="arcade"] body::after{ inset:0; z-index:300; background:repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 2px, transparent 2px 4px); }
+  html[data-theme="arcade"] .brand{ text-transform:uppercase; font-weight:800; letter-spacing:.08em; text-shadow:3px 3px 0 #ff2e88; }
+  html[data-theme="arcade"] .brand small{ text-shadow:none; }
+  html[data-theme="arcade"] .tab{ text-transform:uppercase; font-weight:700; }
+  html[data-theme="arcade"] .section-title{ text-transform:uppercase; color:#ffe600; text-shadow:3px 3px 0 #ff2e88; font-size:22px; }
+  html[data-theme="arcade"] .btn{ box-shadow:4px 4px 0 #ff2e88; font-family:var(--font-display); text-transform:uppercase; font-weight:800; }
+  html[data-theme="arcade"] .cele-title{ font-size:50px; font-weight:900; text-transform:uppercase; letter-spacing:.04em; text-shadow:4px 4px 0 #ff2e88, 8px 8px 0 #00e5ff; animation:blink .5s steps(1) 5; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  html[data-theme="arcade"] .cele-sub{ font-family:var(--font-display); text-transform:uppercase; letter-spacing:.1em; font-weight:700; }
+
+  /* picker: genres and per-page looks */
+  .modal.looks-modal{ max-width:720px; }
+  @media (min-width:700px){ .looks-modal .theme-grid{ grid-template-columns:1fr 1fr; } }
+  .genre-chips, .page-chips{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 4px; }
+  .genre-chips button, .page-chips button{ appearance:none; border:1px solid var(--rule-strong); background:var(--sheet-2); color:var(--ink-soft); border-radius:999px; padding:5px 11px; font:inherit; font-size:12.5px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .genre-chips button.on, .page-chips button.on{ background:var(--ink); color:var(--sheet); border-color:var(--ink); }
+  .page-chips i{ width:10px; height:10px; border-radius:50%; display:inline-block; box-shadow:0 0 0 1px rgba(127,127,127,.5); }
+  .page-chips small{ opacity:.75; font-size:11px; }
+
+  @media (prefers-reduced-motion: reduce){
+    html[data-kit]::before, html[data-kit] body::before, html[data-kit] body::after, html[data-kit] .cele::before, html[data-kit] .cele-title, html[data-kit] .cele-card, html[data-kit] .cele-card::before{ animation:none !important; }
+  }
+
   /* memories */
   .ph-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(92px, 1fr)); gap:8px; }
   .ph-tile{ position:relative; aspect-ratio:1 / 1; border:1px solid var(--rule-strong); border-radius:8px; overflow:hidden; background:var(--sheet-2); padding:0; cursor:pointer; display:flex; align-items:center; justify-content:center; }
@@ -1005,7 +1253,7 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v7.3 · 18 Nov</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v7.4 · 18 Nov</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
       &nbsp;·&nbsp;
@@ -1576,6 +1824,7 @@
   var depTimer = null;
 
   function render(){
+    syncLook();
     document.querySelectorAll('.tab').forEach(function(t){
       var on = t.dataset.tab === state.activeTab;
       t.classList.toggle('active', on);
@@ -3409,8 +3658,8 @@
     else if (a === 'wk-pri'){ toggleWeekPriority(el.dataset.w, el.dataset.id, el.checked); }
     else if (a === 'task-time'){ openTaskTime(el.dataset.id); }
     else if (a === 'templates'){ openTemplates(); }
-    else if (a === 'looks'){ try{ window.localStorage.setItem('compound-looks-seen', '2'); }catch(x){} render(); openLooks(); }
-    else if (a === 'looks-dismiss'){ try{ window.localStorage.setItem('compound-looks-seen', '2'); }catch(x){} render(); }
+    else if (a === 'looks'){ try{ window.localStorage.setItem('compound-looks-seen', '3'); }catch(x){} render(); openLooks(); }
+    else if (a === 'looks-dismiss'){ try{ window.localStorage.setItem('compound-looks-seen', '3'); }catch(x){} render(); }
     else if (a === 'reminders'){ openReminders(); }
     else if (a === 'mood'){ setMood(el.dataset.d, el.dataset.k, +el.dataset.v); }
     else if (a === 'focus-start'){ startFocus((document.getElementById('focusTask') || {}).value, parseInt((document.getElementById('focusMins') || {}).value, 10) || 25); render(); }
@@ -4389,7 +4638,7 @@
           into an on-device backup (IndexedDB), plus one copy a day.
        3. A key that cannot be read is set aside, never overwritten blindly.
        4. Reset and restore take a backup first, so both can be undone. */
-  var APP_VERSION = '7.3';
+  var APP_VERSION = '7.4';
   var DATA_VERSION = 2;          // bump only with a migration below
   var BK_DB = 'compound-backups', BK_STORE = 'snaps', BK_KEEP_DAILY = 14, BK_KEEP_OTHER = 12;
   var MIGRATIONS = {
@@ -5476,6 +5725,38 @@
       shape:f.shape, glyphs:f.glyphs, perfect:f.perfect, prev:famPreview(fam, h1, h2) };
   }
   FAM_IDS.forEach(function(f){ THEMES.push(futureTheme(f, FAMS[f].h1, FAMS[f].h2)); });
+  // genre looks (v7.4): fixed palettes on the shared html[data-kit] skeleton
+  [
+    { id:'portfolio', name:'Portfolio', line:'Your portfolio site: ink black, ice blue and amber, with yield curves drifting behind.', chrome:'#07080B', sheet:'#101217', a:'#9AD7FF', b:'#FFC567', meta:'#07080B', dark:true,
+      parts:['#9AD7FF','#FFC567','#6EE7B7'], shape:'glyph', glyphs:['✦','✦','◆'], perfect:['Compounded','Every promise kept today.'],
+      prev:'radial-gradient(40px 20px at 30% 60%, rgba(154,215,255,.35), transparent 70%), repeating-linear-gradient(170deg, transparent 0 9px, rgba(154,215,255,.35) 9px 10px, transparent 10px 20px), #07080B' },
+    { id:'nifty', name:'NIFTY Tape', line:'A green phosphor market screen in the style of your NIFTY project: candles scroll behind, a tape runs along the bottom, BULL RUN on a perfect day.', chrome:'#010603', sheet:'#03120a', a:'#33ff99', b:'#ff5c5c', meta:'#010603', dark:true,
+      parts:['#33ff99','#7dffb9','#ffffff'], shape:'glyph', glyphs:['▲','₹','▲','+'], perfect:['BULL RUN','Closed at the day\'s high: every promise kept.'],
+      prev:'linear-gradient(transparent 70%, #33ff99 70% 80%, transparent 80%), repeating-linear-gradient(90deg, transparent 0 8px, rgba(51,255,153,.6) 8px 12px, transparent 12px 18px) 0 30%/100% 40% no-repeat, #010603' },
+    { id:'skyward', name:'Skyward', line:'An anime summer sky: painted blue, drifting clouds, a sun glare, and a big やった! when you finish.', chrome:'#3d8fe0', sheet:'#ffffff', a:'#2f7de1', b:'#ff9f43', meta:'#3d8fe0', dark:false,
+      parts:['#ffd34d','#ffffff','#ff7aa8','#7cc4ff'], shape:'glyph', glyphs:['✦','✧','★','✦'], perfect:['やった!','Every promise kept. What a day.'],
+      prev:'radial-gradient(18px 11px at 25% 35%, #fff 95%, transparent), radial-gradient(24px 14px at 35% 30%, #fff 95%, transparent), radial-gradient(20px 12px at 75% 55%, #fff 95%, transparent), linear-gradient(#3d8fe0, #cfe8ff)' },
+    { id:'track', name:'Track Day', line:'A running track: red lanes on the move, yellow race bibs, and a PB stopwatch when you finish.', chrome:'#b9472f', sheet:'#fbfaf6', a:'#ffcc00', b:'#16181c', meta:'#b9472f', dark:false,
+      parts:['#ffcc00','#ffffff','#16181c'], shape:'strip', perfect:['PB!','New personal best: every task done.'],
+      prev:'repeating-linear-gradient(-14deg, #b9472f 0 12px, #fff 12px 13px)' },
+    { id:'zen', name:'Zen Garden', line:'Raked sand, two stones and slow ripples. An ink ensō when the day is complete.', chrome:'#ebe5d6', sheet:'#faf7f0', a:'#5b7553', b:'#b33a2b', meta:'#ebe5d6', dark:false,
+      parts:['#5b7553','#b33a2b','#2b2a26'], shape:'coin', perfect:['Complete','Every promise kept. Breathe.'],
+      prev:'radial-gradient(circle at 30% 45%, #6d665a 0 5px, transparent 5.5px), repeating-radial-gradient(circle at 30% 45%, #ebe5d6 0 5px, rgba(110,95,65,.35) 5px 6px), #ebe5d6' },
+    { id:'tide', name:'Tide', line:'Deep water, slow waves and soft light from the surface. Calm and quiet.', chrome:'#021526', sheet:'#06263a', a:'#4fd1c5', b:'#ffd6a5', meta:'#063049', dark:true,
+      parts:['#4fd1c5','#e7f6f8','#ffd6a5'], shape:'coin', perfect:['High tide','Every promise kept. Let it settle.'],
+      prev:'radial-gradient(60px 20px at 50% 100%, rgba(79,209,197,.35), transparent 70%), linear-gradient(#0b5468, #021526)' },
+    { id:'blueprint', name:'Blueprint', line:'An engineering drawing: white linework on blueprint blue, a turning gear, APPROVED stamped on a perfect day.', chrome:'#0b3a82', sheet:'#0d3f8c', a:'#ffffff', b:'#ff6b5b', meta:'#0b3a82', dark:true,
+      parts:['#ffffff','#9de7ff','#ff6b5b'], shape:'strip', perfect:['Approved','Rev. final: every task signed off.'],
+      prev:'linear-gradient(rgba(255,255,255,.25) 1px, transparent 1px) 0 0/10px 10px, linear-gradient(90deg, rgba(255,255,255,.25) 1px, transparent 1px) 0 0/10px 10px, #0b3a82' },
+    { id:'arcade', name:'Arcade', line:'8-bit: pixel stars, scanlines, a blinking STAGE CLEAR.', chrome:'#0d0221', sheet:'#1a0b3a', a:'#ffe600', b:'#ff2e88', meta:'#0d0221', dark:true,
+      parts:['#ffe600','#ff2e88','#00e5ff'], shape:'glyph', glyphs:['★','◆','■','+'], perfect:['Stage clear','+1UP: every promise kept.'],
+      prev:'linear-gradient(transparent 75%, #ff2e88 75% 80%, #3a1a78 80%), radial-gradient(2px 2px at 20% 20%, #fff, transparent), radial-gradient(2px 2px at 70% 40%, #00e5ff, transparent), #0d0221' }
+  ].forEach(function(t){ t.kit = true; t.glow = t.dark; THEMES.push(t); });
+  var GENRES = [['futuristic','Futuristic'],['finance','Finance'],['tech','Tech'],['anime','Anime'],['sports','Sports'],['calm','Calm'],['retro','Retro'],['classic','Classic']];
+  var THEME_TAGS = { ledger:['classic','finance'], matchday:['sports','classic'], terminal:['finance','retro','classic'], manga:['anime','classic'], sakura:['anime','calm','classic'],
+    neon:['futuristic','retro'], aurora:['futuristic','calm'], holo:['futuristic'], orbit:['futuristic','tech'],
+    portfolio:['tech','finance'], nifty:['finance','tech','retro'], skyward:['anime','calm'], track:['sports'], zen:['calm'], tide:['calm'], blueprint:['tech'], arcade:['retro'] };
+  var PAGES = [['today','Today'],['calendar','Calendar'],['learn','Learn'],['goals','Goals'],['board','Board'],['growth','Growth'],['log','Log'],['history','History']];
 
   // the weekly drop: a new look every Monday, the same on every device that week
   function isoWeek(d){
@@ -5511,30 +5792,40 @@
   function daysToNextDrop(){ var day = new Date().getDay(); return day === 1 ? 7 : (8 - day) % 7 || 7; }
   window.__compoundDrop = function(ds){ var t = weeklyDrop(ds ? new Date(ds + 'T12:00:00') : new Date()); return { fam:t.fam, h1:t.h1, h2:t.h2, name:t.name, week:t.week.w }; };
 
-  function themeId(){
-    try{ var t = window.localStorage.getItem('compound-theme');
-      if (t === 'weekly' || THEMES.some(function(x){ return x.id === t; })) return t;
-      if (t && t.indexOf('fav-') === 0 && savedLooks().some(function(x){ return x.id === t; })) return t;
-      return 'ledger'; }catch(e){ return 'ledger'; }
+  function validLook(t){
+    if (!t) return false;
+    if (t === 'weekly' || THEMES.some(function(x){ return x.id === t; })) return true;
+    return t.indexOf('fav-') === 0 && savedLooks().some(function(x){ return x.id === t; });
   }
-  function themeObj(){
-    var id = themeId();
+  function themeId(){ try{ var t = window.localStorage.getItem('compound-theme'); return validLook(t) ? t : 'ledger'; }catch(e){ return 'ledger'; } }
+  function resolveLook(id){
     if (id === 'weekly') return weeklyDrop();
     if (id.indexOf('fav-') === 0){ var x = savedLooks().find(function(v){ return v.id === id; }); if (x) return savedTheme(x); }
-    return THEMES.find(function(x){ return x.id === id; });
+    return THEMES.find(function(x){ return x.id === id; }) || THEMES[0];
   }
-  function applyTheme(id){
-    try{ window.localStorage.setItem('compound-theme', id); }catch(e){}
-    var th = themeObj(), d = document.documentElement, attr = th.fam || (th.id === 'ledger' ? '' : th.id);
+  // one look everywhere, or a different look per page
+  function lookMode(){ try{ return window.localStorage.getItem('compound-theme-mode') === 'pages' ? 'pages' : 'all'; }catch(e){ return 'all'; } }
+  function pageLooks(){ try{ var v = JSON.parse(window.localStorage.getItem('compound-theme-pages') || '{}'); return v && typeof v === 'object' ? v : {}; }catch(e){ return {}; } }
+  function pageLookId(page){ if (lookMode() === 'pages'){ var p = pageLooks()[page]; if (validLook(p)) return p; } return themeId(); }
+  function setPageLook(page, id){ var p = pageLooks(); p[page] = id; try{ window.localStorage.setItem('compound-theme-pages', JSON.stringify(p)); }catch(e){} }
+  var paintedLook = null;
+  function currentPage(){ return (typeof state !== 'undefined' && state && state.activeTab) || 'today'; }
+  function themeObj(){ return resolveLook(pageLookId(currentPage())); }
+  function paintLook(){
+    var id = pageLookId(currentPage()), th = resolveLook(id), d = document.documentElement, attr = th.fam || (th.id === 'ledger' ? '' : th.id);
+    paintedLook = id;
     if (attr) d.setAttribute('data-theme', attr); else d.removeAttribute('data-theme');
     if (th.fam){ d.setAttribute('data-fam', th.fam); d.style.setProperty('--h1', th.h1); d.style.setProperty('--h2', th.h2); }
     else { d.removeAttribute('data-fam'); d.style.removeProperty('--h1'); d.style.removeProperty('--h2'); }
     if (th.dark) d.setAttribute('data-dark', ''); else d.removeAttribute('data-dark');
+    if (th.kit) d.setAttribute('data-kit', ''); else d.removeAttribute('data-kit');
     var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', th.meta);
-    try{ window.localStorage.setItem('compound-theme-applied', JSON.stringify({ t:attr, fam:th.fam || null, h1:th.h1, h2:th.h2, dark:!!th.dark, m:th.meta })); }catch(e){}
+    try{ window.localStorage.setItem('compound-theme-applied', JSON.stringify({ t:attr, fam:th.fam || null, h1:th.h1, h2:th.h2, dark:!!th.dark, kit:!!th.kit, m:th.meta })); }catch(e){}
   }
+  function syncLook(){ if (pageLookId(currentPage()) !== paintedLook) paintLook(); }
+  function applyTheme(id){ try{ window.localStorage.setItem('compound-theme', id); }catch(e){} paintLook(); }
   // a weekly look changes on Monday even if the app was left open
-  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible' && themeId() === 'weekly') applyTheme('weekly'); });
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible' && paintedLook === 'weekly') paintLook(); });
   function fxLevel(){ try{ var v = window.localStorage.getItem('compound-fx'); return v === 'subtle' || v === 'off' ? v : 'full'; }catch(e){ return 'full'; } }
   function reducedMotion(){ return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
   function haptic(ms){ try{ if (fxLevel() !== 'off' && window.localStorage.getItem('compound-haptics') !== 'off' && navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
@@ -5733,41 +6024,64 @@
   function themeCard(t, cur, extra){
     return '<button class="theme-card'+(t.id === cur ? ' on' : '')+(extra ? ' drop-card' : '')+'" data-theme-pick="'+escapeHtml(t.id)+'" aria-pressed="'+(t.id === cur)+'">'+themePreview(t)+'<span><b>'+escapeHtml(t.name)+(extra || '')+'</b><small>'+escapeHtml(t.line)+'</small></span></button>';
   }
+  var lkGenre = 'all', lkPage = null;
   function openLooks(){
-    var modalRoot = document.getElementById('modalRoot'), cur = themeId(), fx = fxLevel();
+    var modalRoot = document.getElementById('modalRoot'), fx = fxLevel(), mode = lookMode();
+    if (!lkPage) lkPage = currentPage();
+    var cur = mode === 'pages' ? pageLookId(lkPage) : themeId();
     var hap = true; try{ hap = window.localStorage.getItem('compound-haptics') !== 'off'; }catch(e){}
     var drop = weeklyDrop(), saved = savedLooks(), kept = saved.some(function(x){ return x.id === drop.dropKey; }), nd = daysToNextDrop();
-    modalRoot.innerHTML = '<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-label="Look and feel"><h3>Look and feel</h3>' +
-      '<p>Pick a look. It changes on this device only, right away.</p>' +
+    var inGenre = function(t){ return lkGenre === 'all' || (THEME_TAGS[t.id] || []).indexOf(lkGenre) >= 0; };
+    var grid = function(list){ return list.length ? '<div class="theme-grid" style="margin-top:6px;">' + list.map(function(t){ return themeCard(t, cur); }).join('') + '</div>' : ''; };
+    var body = '';
+    if (lkGenre === 'all'){
+      body = GENRES.map(function(g){
+        var list = THEMES.filter(function(t){ return (THEME_TAGS[t.id] || ['classic'])[0] === g[0]; });
+        return list.length ? '<span class="look-group">'+g[1]+'</span>' + grid(list) : '';
+      }).join('');
+    } else body = grid(THEMES.filter(inGenre));
+    var pageName = (PAGES.find(function(p){ return p[0] === lkPage; }) || PAGES[0])[1];
+    modalRoot.innerHTML = '<div class="modal-bg" id="modalBg"><div class="modal looks-modal" role="dialog" aria-label="Look and feel"><h3>Look and feel</h3>' +
+      '<div class="seg" style="margin:2px 0 8px;"><button data-lk-mode="all" class="'+(mode === 'all' ? 'on' : '')+'">Same look on every page</button><button data-lk-mode="pages" class="'+(mode === 'pages' ? 'on' : '')+'">Different look per page</button></div>' +
+      (mode === 'pages' ? '<p style="margin:4px 0 0;">Choose a page, then tap a look for it. Pages you leave alone use the main look ('+escapeHtml(resolveLook(themeId()).name)+').</p>' +
+        '<div class="page-chips">' + PAGES.map(function(p){ var t = resolveLook(pageLookId(p[0])); return '<button data-page-sel="'+p[0]+'" class="'+(p[0] === lkPage ? 'on' : '')+'"><i style="background:'+t.a+'"></i>'+p[1]+' <small>'+escapeHtml(t.name)+'</small></button>'; }).join('') + '</div>' +
+        '<div class="drop-actions"><span>Now choosing for <b>'+pageName+'</b>.</span><button class="link-btn" id="lkResetPages">use the main look on every page</button></div>'
+        : '<p style="margin:4px 0 0;">Pick a look. It changes on this device only, right away.</p>') +
       '<span class="look-group">This week\'s drop</span>' +
       '<div class="theme-grid" style="margin-top:6px;">' + themeCard(drop, cur, '<span class="badge-new">New</span>') + '</div>' +
       '<div class="drop-actions"><span>A new look arrives every Monday. Next one in '+nd+' day'+(nd === 1 ? '' : 's')+'. Pick this one to get each new drop automatically.</span>' +
         (kept ? '<span>Saved ✓</span>' : '<button class="link-btn" id="lkKeep">Save this one to keep it</button>') + '</div>' +
-      '<span class="look-group">Futuristic</span>' +
-      '<div class="theme-grid" style="margin-top:6px;">' + THEMES.filter(function(t){ return t.fam; }).map(function(t){ return themeCard(t, cur); }).join('') + '</div>' +
-      (saved.length ? '<span class="look-group">Saved drops</span><div class="theme-grid" style="margin-top:6px;">' + saved.map(function(x){ return themeCard(savedTheme(x), cur); }).join('') + '</div>' +
+      (saved.length ? '<span class="look-group">Saved drops</span>' + grid(saved.map(savedTheme)) +
         '<div class="drop-actions">' + saved.map(function(x){ return '<button class="link-btn" data-unsave="'+escapeHtml(x.id)+'">remove '+escapeHtml(x.name)+'</button>'; }).join(' ') + '</div>' : '') +
-      '<span class="look-group">Classic</span>' +
-      '<div class="theme-grid" style="margin-top:6px;">' + THEMES.filter(function(t){ return !t.fam; }).map(function(t){ return themeCard(t, cur); }).join('') + '</div>' +
+      '<div class="genre-chips">' + [['all','All']].concat(GENRES).map(function(g){ return '<button data-genre="'+g[0]+'" class="'+(lkGenre === g[0] ? 'on' : '')+'">'+g[1]+'</button>'; }).join('') + '</div>' +
+      body +
       '<span class="field-label">Celebrations</span><div class="seg" style="margin:4px 0 10px;">' + [['full','Full'],['subtle','Subtle'],['off','Off']].map(function(o){ return '<button data-fx="'+o[0]+'" class="'+(fx === o[0] ? 'on' : '')+'">'+o[1]+'</button>'; }).join('') + '</div>' +
       '<label class="wk-pri-row opt-row"><input type="checkbox" id="hapOn"'+(hap ? ' checked' : '')+'> <span>Vibrate on ticks (Android)</span></label>' +
       '<div class="row-btns" style="margin-top:12px;"><button class="btn ghost small" id="lkTry">Preview a perfect day</button><button class="btn small" id="lkDone">Done</button></div></div></div>';
-    var close = function(){ modalRoot.innerHTML = ''; };
+    var close = function(){ modalRoot.innerHTML = ''; lkPage = null; };
     var keepScroll = function(){ var m = modalRoot.querySelector('.modal'); return m ? m.scrollTop : 0; };
     var reopen = function(top){ openLooks(); var m = modalRoot.querySelector('.modal'); if (m) m.scrollTop = top; };
     document.getElementById('lkDone').onclick = close;
     document.getElementById('modalBg').addEventListener('click', function(e){ if (e.target.id === 'modalBg') close(); });
-    modalRoot.querySelectorAll('[data-theme-pick]').forEach(function(b){ b.onclick = function(){ var top = keepScroll(); applyTheme(b.dataset.themePick); try{ window.localStorage.setItem('compound-looks-seen', '2'); }catch(e){} render(); reopen(top); }; });
+    modalRoot.querySelectorAll('[data-theme-pick]').forEach(function(b){ b.onclick = function(){
+      var top = keepScroll(), id = b.dataset.themePick;
+      if (lookMode() === 'pages'){ setPageLook(lkPage, id); paintLook(); } else applyTheme(id);
+      try{ window.localStorage.setItem('compound-looks-seen', '3'); }catch(e){}
+      render(); reopen(top); }; });
+    modalRoot.querySelectorAll('[data-lk-mode]').forEach(function(b){ b.onclick = function(){ try{ window.localStorage.setItem('compound-theme-mode', b.dataset.lkMode); }catch(e){} paintLook(); reopen(0); }; });
+    modalRoot.querySelectorAll('[data-page-sel]').forEach(function(b){ b.onclick = function(){ var top = keepScroll(); lkPage = b.dataset.pageSel; reopen(top); }; });
+    modalRoot.querySelectorAll('[data-genre]').forEach(function(b){ b.onclick = function(){ var top = keepScroll(); lkGenre = b.dataset.genre; reopen(top); }; });
+    var rp = document.getElementById('lkResetPages'); if (rp) rp.onclick = function(){ try{ window.localStorage.removeItem('compound-theme-pages'); }catch(e){} paintLook(); reopen(keepScroll()); };
     var kb = document.getElementById('lkKeep'); if (kb) kb.onclick = function(){ var top = keepScroll(); var id = keepDrop(); if (themeId() === 'weekly') applyTheme(id); toast('Saved. It stays in Saved drops after this week.'); reopen(top); };
-    modalRoot.querySelectorAll('[data-unsave]').forEach(function(b){ b.onclick = function(){ var top = keepScroll(); var id = b.dataset.unsave; unsaveLook(id); if (themeId() === 'ledger' && id === (function(){ try{ return window.localStorage.getItem('compound-theme'); }catch(e){ return ''; } })()) applyTheme('weekly'); reopen(top); }; });
+    modalRoot.querySelectorAll('[data-unsave]').forEach(function(b){ b.onclick = function(){ var top = keepScroll(); unsaveLook(b.dataset.unsave); paintLook(); reopen(top); }; });
     modalRoot.querySelectorAll('[data-fx]').forEach(function(b){ b.onclick = function(){ var top = keepScroll(); try{ window.localStorage.setItem('compound-fx', b.dataset.fx); }catch(e){} reopen(top); }; });
     document.getElementById('hapOn').onchange = function(e){ try{ window.localStorage.setItem('compound-haptics', e.target.checked ? 'on' : 'off'); }catch(x){} };
     document.getElementById('lkTry').onclick = function(){ close(); var th = themeObj(); celebrate(th.perfect[0], th.perfect[1], { ticker:'COMPOUND ▲ 5/5 KEPT    XP ▲ +120    STREAK 12D ▲    ' }); };
   }
   function newLooksBanner(){
-    var seen = false; try{ seen = window.localStorage.getItem('compound-looks-seen') === '2'; }catch(e){}
+    var seen = false; try{ seen = window.localStorage.getItem('compound-looks-seen') === '3'; }catch(e){}
     if (seen) return '';
-    return '<div class="looks-banner"><div><b>New: futuristic looks.</b> Neon Grid, Aurora, Holo and Mission Control, plus a fresh look every Monday. Tap Choose to pick one.</div>' +
+    return '<div class="looks-banner"><div><b>New: 17 looks by genre.</b> Portfolio, NIFTY Tape, anime, sports, calm, tech and retro looks, a fresh one every Monday, and a different look per page if you like. Tap Choose.</div>' +
       '<div class="install-btns"><button class="btn small" data-act="looks">Choose</button><button class="link-btn" data-act="looks-dismiss">later</button></div></div>';
   }
 
