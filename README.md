@@ -22,15 +22,17 @@
 
 | Tab | What you do there |
 |---|---|
-| **Today** | Write the day's tasks, tick them off for XP, close out the day. Shows today's chores, suggested practice and coach notes. |
-| **Calendar** | Set recurring chores (every day, chosen weekdays, or N times a week or month). Each day turns green (85%+), yellow (50 to 85%) or red (under 50%). Days with log entries show ✎; tap one to read them or jump to that day in the Log. |
-| **Learn** | Level-by-level plans for Japanese, ML / Python, quant finance and fitness, or any skill you plan with AI. One practice a day per skill, plus spaced reviews. |
+| **Today** | Write the day's tasks, tick them off for XP, close out the day. Give a task a start time and length to see your schedule, with a warning when the day is overbooked or blocks overlap. Rate mood and energy, run a focus timer on a task, add photos, apply a saved day template. |
+| **Calendar** | Month view with recurring chores, where each day turns green (85%+), yellow (50 to 85%) or red (under 50%); ✎ marks logged days and ◉ days with photos. **Year** view of the last 12 months, a **Week** review (what slipped, stats, three priorities for next week), and a **Recap** of each month with its photos. Each chore shows its streak, best streak and a 20-week heatmap. |
+| **Learn** | Level-by-level plans for Japanese, ML / Python, quant finance and fitness, or any skill you plan with AI. One practice a day per skill, plus spaced reviews. A CFA Level I pack: the 10 topics with 2027 exam weights, a reading plan back from your exam date, question logging with accuracy per topic, and formulas in spaced review. |
 | **Goals** | Long and short-term goals on a departures board, with steps and an on-time or delayed status. |
 | **Board** | Sticky-note promises to people. Peel one off when it's kept. |
 | **Growth** | Your compound balance: a kept day adds 1%, an empty day takes 1% away. |
-| **Log, History** | A permanent record of every day. |
+| **Log, History** | A permanent record of every day. **Search** (header, or press /) finds anything: tasks, log entries, day notes, photo captions, notes, goals and weekly reviews. |
 
 A voice coach (female or male) speaks at key moments and works offline.
+
+**Reminders:** while Compound is open it can notify you 5 minutes before a time block, when a focus block ends, and in the evening if the day is still open. For alerts when it is closed, the Reminders screen adds a daily morning and evening nudge, or today's time blocks, to your phone's own calendar.
 
 ## The coach learns from you
 
@@ -85,6 +87,10 @@ It is a single-file PWA: `index.html` holds the app, `library.js` holds the buil
 ```bash
 npm install
 npm test
+pip install playwright pillow && python -m playwright install chromium
+python tests/smoke_browser.py     # every tab and main action, phone size
+python tests/features_browser.py  # v7 features
+python tests/photos_browser.py    # photos and two-device photo sync
 ```
 
 The tests run the app in jsdom. `tests/upgrade.test.js` loads ledgers saved by older versions (v5 and v6.1) into the current build and fails if any saved key or value is lost, if the pre-update backup is not an exact copy, or if a restore does not bring the data back. GitHub Actions runs these tests on every push.
