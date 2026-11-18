@@ -1,10 +1,20 @@
-const CACHE_NAME = 'compound-v7-4';
+const CACHE_NAME = 'compound-v7-5';
 const SHELL = [
   './',
   './index.html',
   './library.js',
   './manifest.json',
   './caveat.woff2',
+  './fonts/bangers-latin-400-normal.woff2',
+  './fonts/barlow-condensed-latin-500-normal.woff2',
+  './fonts/barlow-condensed-latin-700-normal.woff2',
+  './fonts/barlow-condensed-latin-800-normal.woff2',
+  './fonts/bebas-neue-latin-400-normal.woff2',
+  './fonts/orbitron-latin-700-normal.woff2',
+  './fonts/orbitron-latin-900-normal.woff2',
+  './fonts/rajdhani-latin-500-normal.woff2',
+  './fonts/rajdhani-latin-700-normal.woff2',
+  './fonts/share-tech-mono-latin-400-normal.woff2',
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
