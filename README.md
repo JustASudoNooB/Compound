@@ -30,7 +30,7 @@
 | **Growth** | Your compound balance: a kept day adds 1%, an empty day takes 1% away. |
 | **Log, History** | A permanent record of every day. **Search** (header, or press /) finds anything: tasks, log entries, day notes, photo captions, notes, goals and weekly reviews. |
 
-**Five looks** (footer → look): Ledger, Matchday, Terminal, Manga and Sakura, each with its own colours, type and celebration. Ticking a task bursts particles and fills the day's ring; quick ticks build a combo for bonus XP; a perfect day, a streak milestone or a new level gets a full-screen moment; 23 achievements sit on the Growth tab. Celebrations can be set to full, subtle or off, and follow the system's reduced-motion setting.
+**Looks** (footer → look): four futuristic looks with moving backgrounds (Neon Grid, Aurora, Holo and Mission Control), five classic ones (Ledger, Matchday, Terminal, Manga and Sakura), and a **weekly drop**: a new look every Monday, generated from one of the futuristic styles in new colours. Pick the drop to get each new one automatically, or save one you like to keep it after its week. Each look has its own colours, type and celebration. Ticking a task bursts particles and fills the day's ring; quick ticks build a combo for bonus XP; a perfect day, a streak milestone or a new level gets a full-screen moment; 23 achievements sit on the Growth tab. Celebrations can be set to full, subtle or off, and follow the system's reduced-motion setting.
 
 A voice coach (female or male) speaks at key moments and works offline.
 
