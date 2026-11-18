@@ -53,8 +53,12 @@ Keys stay on your device and are never included in exports or backups. On Google
 ## Install
 
 **iPhone or iPad:** open the link in Safari, tap Share, then **Add to Home Screen**.
-**Android:** open the link in Chrome, tap ⋮, then **Install app**.
+**Android:** open the link in Chrome, tap **Install** on the banner (or ⋮ → **Install app**).
 **Windows or Mac:** open the link in Chrome, Edge or Brave, then click the install icon in the address bar.
+
+## Memories
+
+Add photos to any day from Today or from the day's panel on the Calendar. Photos are resized to at most 1600 px (about 200 KB each), kept on the device, and shown on the Calendar (◉) and in History. Tap one for full screen, a caption, or delete. With sync on, each photo is also stored in your private `compound-sync` repo and appears on your other devices. Export files hold your ledger, not your photos; sync is what keeps photos safe across devices.
 
 ## Sync between devices
 

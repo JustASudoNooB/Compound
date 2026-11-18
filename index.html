@@ -453,6 +453,32 @@
   .sync-steps{ margin:0 0 12px; padding-left:20px; font-size:13px; color:var(--ink-soft); }
   .sync-steps li{ margin-bottom:6px; }
   .sync-steps a{ color:var(--teal); font-weight:600; }
+  /* memories */
+  .ph-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(92px, 1fr)); gap:8px; }
+  .ph-tile{ position:relative; aspect-ratio:1 / 1; border:1px solid var(--rule-strong); border-radius:8px; overflow:hidden; background:var(--sheet-2); padding:0; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .ph-tile img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .ph-tile img:not([src]){ visibility:hidden; }
+  .ph-tile.ph-wait::after{ content:'syncing…'; position:absolute; font-family:var(--font-mono); font-size:10px; color:var(--ink-faint); }
+  .ph-cap{ position:absolute; left:0; right:0; bottom:0; background:linear-gradient(transparent, rgba(0,0,0,.65)); color:#fff; font-size:10.5px; padding:12px 6px 4px; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ph-add{ flex-direction:column; border-style:dashed; color:var(--ink-soft); }
+  .ph-add input{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .ph-add span{ font-size:26px; line-height:1; }
+  .ph-add small{ font-size:11px; margin-top:4px; }
+  .ph-busy{ font-family:var(--font-mono); font-size:11px; color:var(--ink-soft); cursor:default; }
+  .cal-ph{ position:absolute; bottom:2px; right:4px; font-size:9.5px; line-height:1; color:var(--teal); font-weight:700; }
+  .modal-bg.ph-viewer-bg{ background:rgba(6,9,8,.97) !important; padding:0; align-items:stretch; justify-content:center; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  .ph-viewer{ width:100%; max-width:980px; height:100%; max-height:100dvh; display:flex; flex-direction:column; color:#eef2ee; }
+  .ph-view-top{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px; font-family:var(--font-mono); font-size:12px; }
+  .ph-view-top .link-btn{ color:#eef2ee; }
+  .ph-stage{ position:relative; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; padding:0 8px; }
+  .ph-stage img{ max-width:100%; max-height:100%; object-fit:contain; border-radius:6px; }
+  .ph-nav{ position:absolute; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; border:none; background:rgba(255,255,255,.16); color:#fff; font-size:26px; cursor:pointer; }
+  .ph-nav.prev{ left:10px; } .ph-nav.next{ right:10px; }
+  .ph-view-bottom{ display:flex; gap:8px; padding:12px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .ph-view-bottom input{ flex:1; min-width:0; }
+  .ph-view-bottom .btn.ghost{ color:#eef2ee; border-color:rgba(255,255,255,.4); background:transparent; }
+  .install-banner{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; border:1px solid var(--rule-strong); border-left:3px solid var(--teal); border-radius:var(--radius); background:var(--sheet-2); padding:10px 12px; margin:0 0 16px; font-size:13.5px; }
+  .install-btns{ display:flex; gap:10px; align-items:center; }
   .bk-list{ border-top:1px solid var(--rule); }
   .bk-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--rule); font-size:13px; }
   .bk-row small{ display:block; color:var(--ink-soft); font-size:11.5px; margin-top:2px; }
@@ -485,10 +511,12 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.5 · 16 Oct</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v6.6 · 18 Nov</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
       &nbsp;·&nbsp;
+      <button id="installBtn" hidden>install app</button>
+      <span id="installSep" hidden>&nbsp;·&nbsp;</span>
       <button id="syncBtn">sync</button> <span id="syncLabel" style="color:var(--ink-faint);"></span>
       &nbsp;·&nbsp;
       <button id="backupsBtn">backups</button>
@@ -679,7 +707,7 @@
     try{
       var days = await window.storage.list('day:', false);
       var logs = await window.storage.list('log:', false);
-      var keys = ['meta:goals','meta:app','stats:daily-summary','meta:events','meta:notes','meta:chores','meta:chorelog','meta:skills','meta:practicelog','meta:reviews','meta:brain','meta:aichat','meta:manual'];
+      var keys = ['meta:goals','meta:app','stats:daily-summary','meta:events','meta:notes','meta:chores','meta:chorelog','meta:skills','meta:practicelog','meta:reviews','meta:brain','meta:aichat','meta:manual','meta:photos'];
       if(days && days.keys) keys = keys.concat(days.keys);
       if(logs && logs.keys) keys = keys.concat(logs.keys);
       for (var i=0;i<keys.length;i++){
@@ -844,7 +872,7 @@
     boardFilter: 'all',
     noteColor: 'orange',
     growthRange: 30,
-    chores: [], choreLog: {}, skills: [], practiceLog: [], reviews: [], brain: defaultBrain(), dayRecs: {}, chat: [],
+    chores: [], choreLog: {}, skills: [], practiceLog: [], reviews: [], brain: defaultBrain(), dayRecs: {}, chat: [], photos: [], photoBusy: 0,
     calMonth: null, calSel: null, choreFormOpen: null, learnOpen: null,
     aiPlanOpen: false, aiBusy: false, aiError: null, aiFixFor: null, chatBusy: false,
     manual: null, aiPlanDraft: null, aiFixDraft: ''
@@ -856,7 +884,7 @@
       logYears:{}, logYearsAvailable:[], logYearsLoaded:[], editingLogId:null,
       expandedHistoryDate:null, historyDayCache:{}, historyRowLimit:16,
       boardFilter:'all', noteColor:'orange', growthRange:30,
-      chores:[], choreLog:{}, skills:[], practiceLog:[], reviews:[], brain: defaultBrain(), dayRecs:{}, chat:[],
+      chores:[], choreLog:{}, skills:[], practiceLog:[], reviews:[], brain: defaultBrain(), dayRecs:{}, chat:[], photos:[], photoBusy:0,
       calMonth:null, calSel:null, choreFormOpen:null, learnOpen:null,
       aiPlanOpen:false, aiBusy:false, aiError:null, aiFixFor:null, chatBusy:false,
       manual:null, aiPlanDraft:null, aiFixDraft:'' };
@@ -898,6 +926,8 @@
     delete state.meta.voiceOnClose;
     if (state.meta.bonusXp == null) state.meta.bonusXp = 0;
     state.notes = await safeGet('meta:notes', []);
+    state.photos = await safeGet('meta:photos', []);
+    if (!Array.isArray(state.photos)) state.photos = [];
     state.chores = await safeGet('meta:chores', []);
     state.choreLog = await safeGet('meta:chorelog', {});
     state.skills = await safeGet('meta:skills', []);
@@ -1060,6 +1090,7 @@
     else if (state.activeTab === 'log') root.innerHTML = renderLog();
     else root.innerHTML = renderHistory(stats);
     bindDynamic();
+    hydratePhotos();
     if (state.activeTab === 'goals' && document.getElementById('flap-0')){
       depTimer = setInterval(tickDepartures, 1000);
     }
@@ -1155,6 +1186,7 @@
     return '' +
       '<h2 class="section-title">'+prettyDate(state.today)+'</h2>' +
       '<p class="section-sub">Entry '+ (state.day.closedOut? 'closed' : 'open') +' · '+planned+' planned'+dayPill+'</p>' +
+      installBannerHtml() +
       todayCoachHtml(riskCount) +
       '<div class="balance">' +
         '<div class="count">'+completed+'<span> / '+planned+' kept</span></div>' +
@@ -1166,6 +1198,7 @@
       addRow +
       todayPracticeHtml() +
       todayChoresHtml() +
+      memoriesHtml(state.today) +
       closeBlock;
   }
 
@@ -1893,8 +1926,9 @@
       var cls = future ? '' : scoreClass(sc.pct);
       if (ds < state.today && sc.pct != null){ cnt++; sum += sc.pct; if (cls === 'g') g++; else if (cls === 'y') y++; else r++; }
       var sub = future ? (sc.chores.length ? '<span class="cal-dot"></span>' : '') : (sc.pct != null ? Math.round(sc.pct*100)+'%' : '');
-      var nLog = (logMap[ds] || []).length;
-      cells += '<button class="cal-cell '+cls+(ds === state.today ? ' today' : '')+(ds === state.calSel ? ' sel' : '')+(future ? ' future' : '')+(nLog ? ' logged' : '')+'" data-act="cal-day" data-d="'+ds+'" aria-label="'+prettyDate(ds)+(sc.pct != null && !future ? ', '+Math.round(sc.pct*100)+' percent' : '')+(nLog ? ', '+nLog+' log '+(nLog === 1 ? 'entry' : 'entries') : '')+'">' +
+      var nLog = (logMap[ds] || []).length, nPh = photosOn(ds).length;
+      cells += '<button class="cal-cell '+cls+(ds === state.today ? ' today' : '')+(ds === state.calSel ? ' sel' : '')+(future ? ' future' : '')+(nLog ? ' logged' : '')+'" data-act="cal-day" data-d="'+ds+'" aria-label="'+prettyDate(ds)+(sc.pct != null && !future ? ', '+Math.round(sc.pct*100)+' percent' : '')+(nLog ? ', '+nLog+' log '+(nLog === 1 ? 'entry' : 'entries') : '')+(nPh ? ', '+nPh+' photo'+(nPh === 1 ? '' : 's') : '')+'">' +
+        (nPh ? '<span class="cal-ph" aria-hidden="true">&#9673;'+(nPh > 1 ? nPh : '')+'</span>' : '') +
         (nLog ? '<span class="cal-log" aria-hidden="true">&#9998;'+(nLog > 1 ? nLog : '')+'</span>' : '') +
         '<span class="cal-num">'+(k+1)+'</span><span class="cal-sub">'+sub+'</span></button>';
     }
@@ -1911,6 +1945,7 @@
       '<p class="section-sub" style="margin:10px 0 0;">'+tasksLine+(sel === state.today ? ' · <button class="link-btn" data-act="goto" data-tab="today">open Today</button>' : '')+'</p>' +
       (sel < addDays(state.today, -1) ? '<p class="section-sub" style="margin:4px 0 0;">Days older than yesterday are locked.</p>' : '') +
       calLogHtml(sel, logMap[sel] || []) +
+      memoriesHtml(sel, { tight: true }) +
     '</div>';
 
     var active = (state.chores || []).filter(function(c){ return !c.archivedAt && (!c.end || c.end >= state.today); });
@@ -1939,7 +1974,7 @@
         '<button class="cal-nav" data-act="cal-next" aria-label="Next month">&#8250;</button></div>' +
       '<div class="cal-grid cal-wd">'+['M','T','W','T','F','S','S'].map(function(d){ return '<span>'+d+'</span>'; }).join('')+'</div>' +
       '<div class="cal-grid">'+cells+'</div>' +
-      '<div class="cal-legend"><span><i class="g"></i>85%+ · '+g+'</span><span><i class="y"></i>50–85% · '+y+'</span><span><i class="r"></i>under 50% · '+r+'</span><span>&#9998; logged</span>' +
+      '<div class="cal-legend"><span><i class="g"></i>85%+ · '+g+'</span><span><i class="y"></i>50–85% · '+y+'</span><span><i class="r"></i>under 50% · '+r+'</span><span>&#9998; logged</span><span>&#9673; photos</span>' +
         (cnt ? '<span style="margin-left:auto;font-family:var(--font-mono);">avg '+Math.round(sum/cnt*100)+'% · past days</span>' : '') + '</div>' +
       detail +
       '<div class="goal-group" style="margin-top:22px;">' +
@@ -2834,6 +2869,10 @@
       state.calMonth = addMonths(ym+'-01', a === 'cal-prev' ? -1 : 1).slice(0,7); render();
     }
     else if (a === 'log-to-cal'){ var cd = el.dataset.d; state.calMonth = cd.slice(0,7); state.calSel = cd; state.activeTab = 'calendar'; render(); window.scrollTo(0, 0); }
+    else if (a === 'ph-open'){ openPhoto(el.dataset.id); }
+    else if (a === 'open-sync'){ openSync(); }
+    else if (a === 'install'){ doInstall(); }
+    else if (a === 'install-dismiss'){ try{ window.localStorage.setItem('compound-install-dismissed', '1'); }catch(x){} render(); }
     else if (a === 'goto-log'){
       var ld = el.dataset.d;
       state.activeTab = 'log'; state.logFocus = ld; render();
@@ -2927,6 +2966,7 @@
   });
   root.addEventListener('change', function(e){
     var el = e.target;
+    if (el.matches && el.matches('input[data-photo-date]')){ var files = el.files; addPhotos(el.getAttribute('data-photo-date'), files).finally(function(){ try{ el.value = ''; }catch(x){} }); return; }
     if (el.id === 'chFreq'){
       var f = document.getElementById('choreForm'); if (!f) return;
       var v = el.value;
@@ -3111,7 +3151,7 @@
     return '<tr class="hist-detail-row"><td colspan="5" style="background:var(--sheet-2);">' +
       '<div style="padding:10px 6px;">' +
         '<div style="font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;">what was written that day &middot; read-only</div>' +
-        body +
+        body + memoriesHtml(date, { add: false, tight: true }) +
       '</div>' +
     '</td></tr>';
   }
@@ -3777,7 +3817,7 @@
           into an on-device backup (IndexedDB), plus one copy a day.
        3. A key that cannot be read is set aside, never overwritten blindly.
        4. Reset and restore take a backup first, so both can be undone. */
-  var APP_VERSION = '6.5';
+  var APP_VERSION = '6.6';
   var DATA_VERSION = 2;          // bump only with a migration below
   var BK_DB = 'compound-backups', BK_STORE = 'snaps', BK_KEEP_DAILY = 14, BK_KEEP_OTHER = 12;
   var MIGRATIONS = {
@@ -4056,6 +4096,7 @@
         break;
       }
       if (attempt === 3) throw new Error('Another device kept writing at the same moment. Try again in a minute.');
+      setTimeout(function(){ photoSync(syncConf()); }, 50);
       syncStatus('synced '+new Date().toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' }));
       if (changedLocal){
         state.logYears = {}; state.logYearsLoaded = []; state.historyDayCache = {};
@@ -4170,6 +4211,273 @@
   window.addEventListener('online', function(){ syncNow('quiet'); });
   setInterval(function(){ if (document.visibilityState !== 'hidden') syncNow('quiet'); }, 60000);
 
+  /* ---------------- memories (photos for each day) ----------------
+     The list of photos (date, caption) lives in meta:photos with the rest of
+     the ledger, so it syncs and is backed up like everything else. The images
+     live in their own on-device store (IndexedDB), resized to at most 1600 px.
+     With sync on, each image is also kept as photos/YYYY-MM/<id>.jpg in the
+     private compound-sync repo, and devices download the ones they lack. */
+  var PH_DB = 'compound-photos', PH_STORE = 'blobs', PH_MAX = 1600, PH_THUMB = 360, PH_PER_DAY = 24;
+  var phUrlCache = {};
+  function phOpen(){
+    return withTimeout(new Promise(function(resolve, reject){
+      if (!window.indexedDB){ reject(new Error('This browser cannot store photos.')); return; }
+      var r = window.indexedDB.open(PH_DB, 1);
+      r.onupgradeneeded = function(){ if (!r.result.objectStoreNames.contains(PH_STORE)) r.result.createObjectStore(PH_STORE, { keyPath:'id' }); };
+      r.onsuccess = function(){ resolve(r.result); };
+      r.onerror = function(){ reject(r.error || new Error('Photo storage failed to open')); };
+      r.onblocked = function(){ reject(new Error('Photo storage is busy. Close other Compound tabs and try again.')); };
+    }), 4000, 'photo storage');
+  }
+  async function phRun(mode, fn){
+    var db = await phOpen();
+    return new Promise(function(resolve, reject){
+      var tx = db.transaction(PH_STORE, mode), req = fn(tx.objectStore(PH_STORE));
+      tx.oncomplete = function(){ db.close(); resolve(req ? req.result : undefined); };
+      tx.onerror = tx.onabort = function(){ db.close(); reject(tx.error || new Error('Photo storage failed')); };
+    });
+  }
+  function phGet(id){ return phRun('readonly', function(st){ return st.get(id); }); }
+  function phPut(rec){ return phRun('readwrite', function(st){ st.put(rec); return null; }); }
+  function phDel(id){ return phRun('readwrite', function(st){ st.delete(id); return null; }); }
+  function phAllIds(){ return phRun('readonly', function(st){ return st.getAllKeys(); }); }
+  function livePhotos(){ return (state.photos || []).filter(function(p){ return p && !p.deleted; }); }
+  function photosOn(ds){ return livePhotos().filter(function(p){ return p.date === ds; }).sort(function(a, b){ return a.createdAt < b.createdAt ? -1 : 1; }); }
+  function savePhotoMeta(){ return safeSet('meta:photos', state.photos); }
+
+  function loadImage(file){
+    return new Promise(function(resolve, reject){
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function(){ resolve({ img: img, url: url }); };
+      img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('Could not read '+(file.name || 'that photo')+'. Try a JPEG or PNG.')); };
+      img.src = url;
+    });
+  }
+  function drawScaled(img, max, quality){
+    var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    var s = Math.min(1, max / Math.max(w, h));
+    var cw = Math.max(1, Math.round(w * s)), ch = Math.max(1, Math.round(h * s));
+    var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+    var cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cw, ch); cx.drawImage(img, 0, 0, cw, ch);
+    return new Promise(function(resolve, reject){
+      cv.toBlob(function(b){ b ? resolve({ blob: b, w: cw, h: ch }) : reject(new Error('Could not compress that photo.')); }, 'image/jpeg', quality);
+    });
+  }
+  async function makePhoto(file){
+    var li = await loadImage(file);
+    try{
+      var full = await drawScaled(li.img, PH_MAX, 0.82), thumb = await drawScaled(li.img, PH_THUMB, 0.72);
+      return { full: await full.blob.arrayBuffer(), thumb: await thumb.blob.arrayBuffer(), w: full.w, h: full.h };
+    } finally { URL.revokeObjectURL(li.url); }
+  }
+  async function addPhotos(ds, files){
+    files = Array.prototype.slice.call(files || []).filter(function(f){ return /^image\//.test(f.type) || /\.(jpe?g|png|heic|heif|webp|gif)$/i.test(f.name || ''); });
+    if (!files.length) return;
+    if (ds > state.today){ toast('Memories can be added to today or earlier days.'); return; }
+    var room = PH_PER_DAY - photosOn(ds).length;
+    if (room <= 0){ toast('That day already has '+PH_PER_DAY+' photos.'); return; }
+    if (files.length > room){ toast('Adding the first '+room+' (limit '+PH_PER_DAY+' a day).'); files = files.slice(0, room); }
+    state.photoBusy = (state.photoBusy || 0) + files.length; render();
+    var added = 0, lastErr = null;
+    for (var i = 0; i < files.length; i++){
+      try{
+        var p = await makePhoto(files[i]);
+        var id = 'ph' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        await phPut({ id: id, full: p.full, thumb: p.thumb, uploaded: false });
+        state.photos.push({ id: id, date: ds, caption: '', w: p.w, h: p.h, bytes: p.full.byteLength, createdAt: new Date().toISOString() });
+        await savePhotoMeta();
+        added++;
+      }catch(e){ lastErr = e; }
+      state.photoBusy--;
+    }
+    state.photoBusy = 0;
+    render();
+    if (added) toast(added === 1 ? 'Memory saved' : added+' memories saved');
+    if (lastErr) toast(lastErr.message);
+    if (added) syncKick();
+  }
+  async function phUrl(id, kind){
+    var key = id + ':' + kind;
+    if (phUrlCache[key]) return phUrlCache[key];
+    var rec = null;
+    try{ rec = await phGet(id); }catch(e){}
+    if (!rec || !rec[kind]) return null;
+    return (phUrlCache[key] = URL.createObjectURL(new Blob([rec[kind]], { type:'image/jpeg' })));
+  }
+  function hydratePhotos(){
+    document.querySelectorAll('img[data-ph]:not([data-done])').forEach(function(img){
+      img.setAttribute('data-done', '1');
+      phUrl(img.getAttribute('data-ph'), img.getAttribute('data-kind') || 'thumb').then(function(u){
+        if (u){ img.src = u; img.parentNode.classList.remove('ph-wait'); }
+        else img.parentNode.classList.add('ph-wait');
+      });
+    });
+  }
+  function memoriesHtml(ds, opts){
+    opts = opts || {};
+    var list = photosOn(ds);
+    var canAdd = ds <= state.today && opts.add !== false;
+    if (!list.length && !canAdd) return '';
+    var tiles = list.map(function(p){
+      return '<button class="ph-tile" data-act="ph-open" data-id="'+p.id+'" aria-label="Open photo'+(p.caption ? ': '+escapeHtml(p.caption) : '')+'">' +
+        '<img data-ph="'+p.id+'" alt="'+escapeHtml(p.caption || 'Memory from '+prettyDate(ds))+'">' +
+        (p.caption ? '<span class="ph-cap">'+escapeHtml(p.caption)+'</span>' : '') + '</button>';
+    }).join('');
+    var busy = state.photoBusy ? '<div class="ph-tile ph-busy">saving…</div>' : '';
+    var add = canAdd ? '<label class="ph-tile ph-add"><input type="file" accept="image/*" multiple data-photo-date="'+ds+'"><span>+</span><small>'+(list.length ? 'add' : 'add photos')+'</small></label>' : '';
+    return '<div class="ph-wrap">' +
+      (opts.title === false ? '' : '<div class="group-head" style="margin-top:'+(opts.tight ? '12px' : '24px')+';"><span class="group-label">Memories'+(list.length ? ' · '+list.length : '')+'</span>' +
+        (syncConf() || !list.length ? '' : '<button class="link-btn" data-act="open-sync">only on this device · sync</button>')+'</div>') +
+      '<div class="ph-grid">'+tiles+busy+add+'</div></div>';
+  }
+  function openPhoto(id){
+    var p = livePhotos().find(function(x){ return x.id === id; });
+    if (!p) return;
+    var day = photosOn(p.date), idx = day.findIndex(function(x){ return x.id === id; });
+    var modalRoot = document.getElementById('modalRoot');
+    modalRoot.innerHTML = '<div class="modal-bg ph-viewer-bg" id="modalBg"><div class="ph-viewer" role="dialog" aria-label="Memory">' +
+      '<div class="ph-view-top"><span>'+escapeHtml(prettyDate(p.date))+' · '+(idx+1)+' / '+day.length+'</span><button class="link-btn" id="phClose" aria-label="Close">close ✕</button></div>' +
+      '<div class="ph-stage">' +
+        (idx > 0 ? '<button class="ph-nav prev" id="phPrev" aria-label="Previous photo">‹</button>' : '') +
+        '<img id="phFull" alt="'+escapeHtml(p.caption || 'Memory')+'">' +
+        (idx < day.length-1 ? '<button class="ph-nav next" id="phNext" aria-label="Next photo">›</button>' : '') +
+      '</div>' +
+      '<div class="ph-view-bottom"><input type="text" id="phCaption" maxlength="200" placeholder="Add a caption" value="'+escapeHtml(p.caption || '')+'">' +
+        '<button class="btn small" id="phSave">Save</button><button class="btn ghost small" id="phDelete">Delete</button></div>' +
+    '</div></div>';
+    var img = document.getElementById('phFull');
+    phUrl(id, 'full').then(function(u){ if (u) img.src = u; else phUrl(id, 'thumb').then(function(t){ if (t) img.src = t; img.alt = 'Still downloading from your other device'; }); });
+    var close = function(){ modalRoot.innerHTML = ''; document.removeEventListener('keydown', keys); };
+    var keys = function(e){ if (e.key === 'Escape') close(); else if (e.key === 'ArrowLeft' && idx > 0) openPhoto(day[idx-1].id); else if (e.key === 'ArrowRight' && idx < day.length-1) openPhoto(day[idx+1].id); };
+    document.addEventListener('keydown', keys);
+    document.getElementById('phClose').onclick = close;
+    document.getElementById('modalBg').addEventListener('click', function(e){ if (e.target.id === 'modalBg') close(); });
+    if (document.getElementById('phPrev')) document.getElementById('phPrev').onclick = function(){ document.removeEventListener('keydown', keys); openPhoto(day[idx-1].id); };
+    if (document.getElementById('phNext')) document.getElementById('phNext').onclick = function(){ document.removeEventListener('keydown', keys); openPhoto(day[idx+1].id); };
+    document.getElementById('phSave').onclick = async function(){
+      p.caption = cleanStr(document.getElementById('phCaption').value, 200); p.updatedAt = new Date().toISOString();
+      await savePhotoMeta(); close(); render(); toast('Caption saved');
+    };
+    document.getElementById('phDelete').onclick = function(){
+      document.removeEventListener('keydown', keys);
+      showConfirm('Delete this memory?', 'It is removed from every synced device. Day backups keep the caption but not the photo.', async function(){
+        p.deleted = true; p.deletedAt = new Date().toISOString(); p.updatedAt = p.deletedAt;
+        await savePhotoMeta();
+        try{ await phDel(p.id); }catch(e){}
+        delete phUrlCache[p.id+':thumb']; delete phUrlCache[p.id+':full'];
+        render(); toast('Memory deleted'); syncKick();
+      });
+    };
+  }
+
+  // photo files in the sync repo
+  function abToB64(buf){
+    var bytes = new Uint8Array(buf), out = '', CH = 0x8000;
+    for (var i = 0; i < bytes.length; i += CH) out += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+    return btoa(out);
+  }
+  function phPath(p){ return 'photos/'+String(p.date).slice(0, 7)+'/'+p.id+'.jpg'; }
+  async function ghBinary(c, path){
+    var res;
+    try{ res = await fetch('https://api.github.com'+path, { cache:'no-store', headers: { 'Authorization':'Bearer '+c.token, 'Accept':'application/vnd.github.raw' } }); }
+    catch(e){ var ne = new Error('offline'); ne.offline = true; throw ne; }
+    if (!res.ok) return { status: res.status, ok: false };
+    return { status: res.status, ok: true, buf: await res.arrayBuffer() };
+  }
+  var photoSyncBusy = false;
+  async function photoSync(c){
+    if (photoSyncBusy || !c) return;
+    photoSyncBusy = true;
+    var moved = 0, more = false, gotNew = false;
+    try{
+      var have = {};
+      ((await phAllIds()) || []).forEach(function(id){ have[id] = 1; });
+      var gone = {}; try{ gone = JSON.parse(window.localStorage.getItem('compound-photo-gone') || '{}') || {}; }catch(e){}
+      var all = state.photos || [];
+      for (var i = 0; i < all.length; i++){
+        var p = all[i]; if (!p || !p.id) continue;
+        if (moved >= 6){ more = true; break; }
+        var base = '/repos/'+c.owner+'/'+c.repo+'/contents/'+phPath(p);
+        if (p.deleted){
+          if (have[p.id]){ try{ await phDel(p.id); }catch(e){} }
+          if (!gone[p.id]){
+            var info = await gh(c, 'GET', base);
+            if (info.ok && info.data && info.data.sha) await gh(c, 'DELETE', base, { message:'Remove a memory', sha: info.data.sha });
+            if (info.ok || info.status === 404){ gone[p.id] = 1; window.localStorage.setItem('compound-photo-gone', JSON.stringify(gone)); }
+            moved++;
+          }
+          continue;
+        }
+        if (have[p.id]){
+          var rec = await phGet(p.id);
+          if (rec && !rec.uploaded && rec.full){
+            var put = await gh(c, 'PUT', base, { message:'Add a memory for '+p.date, content: abToB64(rec.full) });
+            if (put.ok || put.status === 422){ rec.uploaded = true; await phPut(rec); }
+            else if (put.status === 401 || put.status === 403) throw ghError(put, 'upload photos');
+            moved++;
+          }
+        } else {
+          var dl = await ghBinary(c, base);
+          moved++;
+          if (dl.ok){
+            var blob = new Blob([dl.buf], { type:'image/jpeg' }), thumbBuf = dl.buf;
+            try{
+              var li = await loadImage(blob);
+              try{ thumbBuf = await (await drawScaled(li.img, PH_THUMB, 0.72)).blob.arrayBuffer(); } finally { URL.revokeObjectURL(li.url); }
+            }catch(e){}
+            await phPut({ id: p.id, full: dl.buf, thumb: thumbBuf, uploaded: true });
+            gotNew = true;
+          }
+        }
+      }
+    }catch(e){
+      if (!e.offline) state.syncError = e.message;
+    }finally{
+      photoSyncBusy = false;
+    }
+    if (gotNew) render();
+    if (more) setTimeout(function(){ photoSync(syncConf()); }, 1500);
+  }
+
+  /* ---------------- install as an app ---------------- */
+  var installEvt = null;
+  function isStandalone(){ return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
+  function isIOS(){ var ua = navigator.userAgent || ''; return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); }
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); installEvt = e; renderInstallLink(); if (state.activeTab === 'today') render(); });
+  window.addEventListener('appinstalled', function(){ installEvt = null; renderInstallLink(); toast('Compound is installed. Open it from your home screen.'); });
+  function canOfferInstall(){ return !isStandalone() && (installEvt || isIOS() || /Android/.test(navigator.userAgent || '')); }
+  function renderInstallLink(){
+    var b = document.getElementById('installBtn'), sep = document.getElementById('installSep');
+    var show = canOfferInstall();
+    if (b) b.hidden = !show; if (sep) sep.hidden = !show;
+  }
+  function installBannerHtml(){
+    var dismissed = false; try{ dismissed = window.localStorage.getItem('compound-install-dismissed') === '1'; }catch(e){}
+    if (dismissed || !canOfferInstall()) return '';
+    return '<div class="install-banner"><div><b>Use Compound as an app.</b> It opens full screen from your home screen and works offline.</div>' +
+      '<div class="install-btns"><button class="btn small" data-act="install">Install</button><button class="link-btn" data-act="install-dismiss">not now</button></div></div>';
+  }
+  async function doInstall(){
+    if (installEvt){
+      installEvt.prompt();
+      try{ var ch = await installEvt.userChoice; if (ch && ch.outcome === 'accepted'){ installEvt = null; } }catch(e){}
+      renderInstallLink(); render();
+      return;
+    }
+    var ios = isIOS();
+    var modalRoot = document.getElementById('modalRoot');
+    modalRoot.innerHTML = '<div class="modal-bg" id="modalBg"><div class="modal" role="dialog" aria-label="Install Compound">' +
+      '<h3>Install Compound</h3>' +
+      (ios ?
+        '<ol class="sync-steps"><li>Open this page in <b>Safari</b> (other iPad and iPhone browsers can add to the home screen from their share menu too).</li><li>Tap the <b>Share</b> button (the square with an arrow, at the top on iPad).</li><li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li><li>Open Compound from the new icon.</li></ol>' :
+        '<ol class="sync-steps"><li>Open this page in <b>Chrome</b>.</li><li>Tap the <b>⋮</b> menu, then <b>Install app</b> (or <b>Add to Home screen</b>).</li><li>Open Compound from the new icon.</li></ol>') +
+      '<p class="ai-note">The installed app keeps its own copy of your data, separate from the browser tab. Turn on <b>sync</b> in the installed app (paste your setup code) so it has everything from your other devices.</p>' +
+      '<div class="row-btns"><button class="btn small" id="instClose">Got it</button></div></div></div>';
+    document.getElementById('instClose').onclick = function(){ modalRoot.innerHTML = ''; };
+    document.getElementById('modalBg').addEventListener('click', function(e){ if (e.target.id === 'modalBg') modalRoot.innerHTML = ''; });
+  }
+  document.getElementById('installBtn').onclick = function(){ doInstall(); };
+
   /* ---------------- boot ---------------- */
   (async function boot(){
     // backups must never hold up loading the ledger
@@ -4181,6 +4489,7 @@
     render();
     updateBackupLabel();
     renderSyncLabel();
+    renderInstallLink();
     syncNow('quiet');
     setTimeout(function(){ preloadVoice(voiceSettings().gender === 'm' ? 'm' : 'f'); }, 600);
   })();
