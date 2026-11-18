@@ -30,6 +30,8 @@
 | **Growth** | Your compound balance: a kept day adds 1%, an empty day takes 1% away. |
 | **Log, History** | A permanent record of every day. **Search** (header, or press /) finds anything: tasks, log entries, day notes, photo captions, notes, goals and weekly reviews. |
 
+**Five looks** (footer → look): Ledger, Matchday, Terminal, Manga and Sakura, each with its own colours, type and celebration. Ticking a task bursts particles and fills the day's ring; quick ticks build a combo for bonus XP; a perfect day, a streak milestone or a new level gets a full-screen moment; 23 achievements sit on the Growth tab. Celebrations can be set to full, subtle or off, and follow the system's reduced-motion setting.
+
 A voice coach (female or male) speaks at key moments and works offline.
 
 **Reminders:** while Compound is open it can notify you 5 minutes before a time block, when a focus block ends, and in the evening if the day is still open. For alerts when it is closed, the Reminders screen adds a daily morning and evening nudge, or today's time blocks, to your phone's own calendar.

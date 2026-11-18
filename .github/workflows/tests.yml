@@ -26,4 +26,5 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: python tests/smoke_browser.py
       - run: python tests/features_browser.py
+      - run: python tests/looks_browser.py
       - run: python tests/photos_browser.py

@@ -75,7 +75,7 @@ async function boot(storageSeed) {
   qa('[data-action="toggle"]')[0].click(); await wait(20);
   qa('[data-action="toggle"]')[2].click(); await wait(20);
   check('all done plays a done line', /voice\/f\/done\d\.mp3$/.test(w.played[w.played.length - 1] || '') || w.played.slice(-2).some(s => /done\d/.test(s)), w.played.slice(-3).join(','));
-  check('level badge moved past 70 xp', /70 \/ 150 xp/.test(q('#levelBadge').textContent), q('#levelBadge').textContent);
+  check('level badge moved past 70 xp (+15 combo bonus for three quick ticks)', /85 \/ 150 xp/.test(q('#levelBadge').textContent), q('#levelBadge').textContent);
   q('[data-action="coach-today"]').click(); await wait(10);
   check('coach button plays done line', /done\d\.mp3$/.test(w.played[w.played.length - 1]), w.played[w.played.length - 1]);
   q('[data-action="close-day"]').click(); await wait(20);
