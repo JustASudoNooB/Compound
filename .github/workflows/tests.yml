@@ -28,3 +28,4 @@ jobs:
       - run: python tests/features_browser.py
       - run: python tests/looks_browser.py
       - run: python tests/photos_browser.py
+      - run: python tests/update_browser.py

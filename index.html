@@ -748,6 +748,8 @@
   .ph-view-bottom{ display:flex; gap:8px; padding:12px 16px calc(16px + env(safe-area-inset-bottom)); }
   .ph-view-bottom input{ flex:1; min-width:0; }
   .ph-view-bottom .btn.ghost{ color:#eef2ee; border-color:rgba(255,255,255,.4); background:transparent; }
+  .upd-bar{ position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:160; display:flex; gap:12px; align-items:center; padding:10px 12px 10px 16px; border-radius:12px; background:var(--ink); color:var(--sheet); box-shadow:0 18px 40px -16px rgba(0,0,0,.6); font-size:14px; max-width:94vw; }
+  .upd-bar .btn{ background:var(--brass); border-color:var(--brass); color:#fff; }
   .install-banner, .looks-banner{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; border:1px solid var(--rule-strong); border-left:3px solid var(--teal); border-radius:var(--radius); background:var(--sheet-2); padding:10px 12px; margin:0 0 16px; font-size:13.5px; }
   .install-btns{ display:flex; gap:10px; align-items:center; }
   .bk-list{ border-top:1px solid var(--rule); }
@@ -784,7 +786,7 @@
 <div class="wrap">
   <main class="sheet" id="viewRoot"><div class="empty">Loading your ledger…</div></main>
   <div class="footbar">
-    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v7.1 · 18 Nov</span></span>
+    <span><span id="status"></span> <span style="font-family:var(--font-mono);">v7.2 · 18 Nov</span></span>
     <span>
       <button id="voiceBtn">voice settings</button>
       &nbsp;·&nbsp;
@@ -880,9 +882,14 @@
 
   if ('serviceWorker' in navigator){
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./service-worker.js').then(function(reg){ if (reg && reg.update) reg.update(); }).catch(function(){});
+      navigator.serviceWorker.register('./service-worker.js', { updateViaCache:'none' }).then(function(reg){ if (reg && reg.update) reg.update(); }).catch(function(){});
       var reloaded = false;
-      navigator.serviceWorker.addEventListener('controllerchange', function(){ if (reloaded) return; reloaded = true; window.location.reload(); });
+      navigator.serviceWorker.addEventListener('controllerchange', function(){
+        if (reloaded) return;
+        // a new version took over: reload now if nothing is being typed, otherwise offer an update button
+        if (window.__compoundSafeReload && !window.__compoundSafeReload()){ if (window.__compoundShowUpdate) window.__compoundShowUpdate(); return; }
+        reloaded = true; window.location.reload();
+      });
     });
   }
 
@@ -4163,7 +4170,7 @@
           into an on-device backup (IndexedDB), plus one copy a day.
        3. A key that cannot be read is set aside, never overwritten blindly.
        4. Reset and restore take a backup first, so both can be undone. */
-  var APP_VERSION = '7.1';
+  var APP_VERSION = '7.2';
   var DATA_VERSION = 2;          // bump only with a migration below
   var BK_DB = 'compound-backups', BK_STORE = 'snaps', BK_KEEP_DAILY = 14, BK_KEEP_OTHER = 12;
   var MIGRATIONS = {
@@ -5727,6 +5734,69 @@
     if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '') && !document.getElementById('modalBg')){ e.preventDefault(); openSearch(); }
   });
 
+  /* ---------------- automatic updates ----------------
+     Home-screen apps on iPad and iPhone are resumed, not restarted, so the app
+     asks for version.json itself: on start, whenever it comes back to the
+     foreground, when the internet returns and every 15 minutes. When a newer
+     version is out it reloads (only when you are not typing or in a dialog).
+     Your data lives in this device's storage and is never touched by an update;
+     a full backup is also taken before the new version first runs. */
+  function cmpVer(a, b){
+    var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number);
+    for (var i = 0; i < Math.max(x.length, y.length); i++){ var d = (x[i] || 0) - (y[i] || 0); if (d) return d; }
+    return 0;
+  }
+  function safeToReload(){
+    if (document.getElementById('modalBg') || document.querySelector('.cele')) return false;
+    var a = document.activeElement;
+    if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && a.value) return false;
+    var typed = Array.prototype.some.call(document.querySelectorAll('#viewRoot input[type=text], #viewRoot textarea'), function(i){ return i.value && i.value.trim(); });
+    if (typed) return false;
+    return !(state.aiBusy || state.chatBusy || state.photoBusy);
+  }
+  function showUpdateBar(v){
+    if (document.getElementById('updBar')) return;
+    var b = document.createElement('div');
+    b.id = 'updBar'; b.className = 'upd-bar'; b.setAttribute('role', 'status');
+    b.innerHTML = '<span>'+(v === 'new' ? 'A new version' : 'Version '+escapeHtml(v))+' is ready.</span><button class="btn small" id="updGo">Update now</button>';
+    document.body.appendChild(b);
+    document.getElementById('updGo').onclick = function(){ if (v === 'new') window.location.reload(); else goUpdate(v, true); };
+  }
+  function goUpdate(v, force){
+    try{ window.localStorage.setItem('compound-update-tried', JSON.stringify({ v: v, t: Date.now(), from: APP_VERSION })); }catch(e){}
+    // a new address skips any copy of the page the browser kept
+    window.location.replace(window.location.pathname + '?v=' + encodeURIComponent(v) + (force ? '&f=1' : '') + window.location.hash);
+  }
+  var updTimer = null;
+  function applyUpdateWhenSafe(v){
+    var tried = null; try{ tried = JSON.parse(window.localStorage.getItem('compound-update-tried') || 'null'); }catch(e){}
+    if (tried && tried.v === v && Date.now() - tried.t < 10 * 60000){ showUpdateBar(v); return; }
+    if (!safeToReload()){ showUpdateBar(v); clearTimeout(updTimer); updTimer = setTimeout(function(){ applyUpdateWhenSafe(v); }, 20000); return; }
+    goUpdate(v, false);
+  }
+  function updateCheck(){
+    if (navigator.onLine === false) return;
+    fetch('./version.json?t=' + Date.now(), { cache:'no-store' }).then(function(r){ return r.ok ? r.json() : null; }).then(function(info){
+      if (!info || !info.version || cmpVer(info.version, APP_VERSION) <= 0) return;
+      state.updateReady = info.version;
+      try{ navigator.serviceWorker.getRegistration().then(function(r){ if (r) r.update(); }).catch(function(){}); }catch(e){}
+      applyUpdateWhenSafe(info.version);
+    }).catch(function(){});
+  }
+  function afterUpdateNotice(){
+    var tried = null; try{ tried = JSON.parse(window.localStorage.getItem('compound-update-tried') || 'null'); }catch(e){}
+    if (tried && cmpVer(APP_VERSION, tried.from || '0') > 0){
+      try{ window.localStorage.removeItem('compound-update-tried'); }catch(e){}
+      toast('Updated to v'+APP_VERSION+'. All your data is here.');
+    }
+    if (/[?&]v=/.test(window.location.search)) try{ history.replaceState(null, '', window.location.pathname + window.location.hash); }catch(e){}
+  }
+  window.__compoundSafeReload = safeToReload;
+  window.__compoundShowUpdate = function(){ showUpdateBar(state.updateReady || 'new'); };
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') updateCheck(); });
+  window.addEventListener('online', updateCheck);
+  setInterval(function(){ if (document.visibilityState !== 'hidden') updateCheck(); }, 15 * 60000);
+
   /* ---------------- boot ---------------- */
   (async function boot(){
     // backups must never hold up loading the ledger
@@ -5741,6 +5811,8 @@
     renderInstallLink();
     renderFocusBar();
     applyTheme(themeId());
+    afterUpdateNotice();
+    setTimeout(updateCheck, 1500);
     setTimeout(function(){ checkAchievements(!state.achInit); if (!state.achInit){ state.achInit = true; var n = Object.keys(state.achievements || {}).length; if (n) toast(n+' achievement'+(n === 1 ? '' : 's')+' already earned. See Growth.'); } }, 1200);
     syncNow('quiet');
     setTimeout(function(){ preloadVoice(voiceSettings().gender === 'm' ? 'm' : 'f'); }, 600);

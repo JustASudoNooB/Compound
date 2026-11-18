@@ -77,7 +77,7 @@ After that, devices sync when the app opens, a few seconds after each change, an
 
 Your data lives only on your device, in the browser's storage for this site. Nothing is uploaded.
 
-- **Updating:** close the app fully and open it again. The footer shows the version (for example `v6.2 · 14 Oct`). You never need to delete the app or clear website data to update.
+- **Updating is automatic.** The app checks for a new version when it opens, whenever you come back to it, when the internet returns, and every 15 minutes. It updates itself when you are not typing, or shows an **Update now** button if you are. The footer shows the version. You never need to delete the app or clear website data to update.
 - **Updates never delete data.** Before the first launch of each new version, Compound saves a full copy of your ledger on the device. It also saves one copy a day. To see or restore them, open **backups** in the footer. A restore saves the current state first, so it can be undone, and so can **reset all**.
 - **Keep an export file.** Device backups disappear if you delete the home-screen app or clear website data. Tap **export data** every week or two and keep the file somewhere safe (Files, Drive, email to yourself). To bring it back, use **import data**. Import adds to what is already there and does not overwrite it.
 - **Moving devices:** export on the old device and import on the new one. Each device keeps its own copy.

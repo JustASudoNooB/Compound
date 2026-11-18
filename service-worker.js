@@ -1,4 +1,4 @@
-const CACHE_NAME = 'compound-v7-1';
+const CACHE_NAME = 'compound-v7-2';
 const SHELL = [
   './',
   './index.html',
@@ -157,10 +157,12 @@ self.addEventListener('fetch', function (event) {
     event.respondWith(rangeResponse(event.request, range));
     return;
   }
-  // pages: try the network first so a new version shows on the first open; fall back to the cache offline
+  // the version check must always reach the server
+  if (/\/version\.json$/.test(new URL(event.request.url).pathname)) return;
+  // pages: always from the network (skipping the browser's own cache) so a new version shows at once; cached copy when offline
   if (event.request.mode === 'navigate' || /\/(index\.html)?$/.test(new URL(event.request.url).pathname)) {
     event.respondWith(
-      fetch(event.request).then(function (response) {
+      fetch(event.request.url, { cache: 'no-store', credentials: 'same-origin' }).then(function (response) {
         if (response && response.ok) { var copy = response.clone(); caches.open(CACHE_NAME).then(function (c) { c.put('./index.html', copy); }); }
         return response;
       }).catch(function () {
